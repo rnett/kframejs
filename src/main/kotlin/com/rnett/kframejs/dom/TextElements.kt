@@ -18,3 +18,16 @@ inline fun IDisplayElement.p(
         }
         builder()
     }
+
+@KFrameElementDSL
+inline fun IDisplayElement.br() =
+    displayElement("br")
+
+@KFrameElementDSL
+inline fun IDisplayElement.br(lines: Int) {
+    for (i in 0..lines)
+        br()
+}
+
+
+val IDisplayElement.br get() = br()

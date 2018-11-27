@@ -1,8 +1,10 @@
 package com.rnett.kframejs.structure
 
 import org.w3c.dom.Text
+import org.w3c.dom.events.Event
 import org.w3c.dom.get
 import kotlin.browser.document
+import kotlin.reflect.KProperty
 import org.w3c.dom.Element as W3Element
 
 @DslMarker
@@ -34,7 +36,7 @@ object Head : IMetaElement {
         get() = document.getElementsByTagName("head")[0]!!
 }
 
-abstract class Element<E : Element<E>>(val tag: String, val parent: ICanHaveElement) : ICanHaveElement {
+abstract class Element<E : Element<E>>(val tag: String, parent: ICanHaveElement) : ICanHaveElement {
 
     constructor(tag: String, parent: AnyElement) : this(tag, parent.underlying.kframeWrapper())
 
@@ -56,8 +58,18 @@ abstract class Element<E : Element<E>>(val tag: String, val parent: ICanHaveElem
     var type by attributes
     var title by attributes
 
-    val _children = mutableListOf<AnyElement>()
+    private val _children = mutableListOf<AnyElement>()
     val children = _children.toList()
+
+    val rawParent = parent
+
+    inline fun <reified P : Element<P>> parent(): P {
+        if (rawParent is P)
+            return rawParent
+        else throw ClassCastException("Node is at the top of the tree of KFrame nodes.  Use rawParent instead")
+    }
+
+    val on = Events(this as E)
 
     var innerHTML: String
         get() = underlying.innerHTML
@@ -91,6 +103,45 @@ abstract class Element<E : Element<E>>(val tag: String, val parent: ICanHaveElem
     }
 
     fun addText(text: String) = text.unaryPlus()
+
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other is W3Element) return underlying == other
+
+        if (other !is Element<*>) return false
+
+        if (underlying != other.underlying) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return underlying.hashCode()
+    }
+
+    inline fun on(event: String, useCapture: Boolean = false, noinline handler: (Event) -> Unit): EventHandler {
+        underlying.addEventListener(event, handler, useCapture)
+        return EventHandler(this, event, useCapture, handler)
+    }
+
+    inline fun <H : Event> on(
+        event: String,
+        useCapture: Boolean = false,
+        crossinline handler: (H) -> Unit
+    ): EventHandler {
+        val actualHandler: (Event) -> Unit = { handler(it as H) }
+        underlying.addEventListener(event, actualHandler, useCapture)
+        return EventHandler(this, event, useCapture, actualHandler)
+    }
+
+    inline fun String.on(useCapture: Boolean = false, noinline handler: (Event) -> Unit) = on(this, useCapture, handler)
+
+
+    fun bound(vararg props: KProperty<*>, builder: ElementBuilder<in E>) {
+        //TODO need a way of intercepting events.  Can add to on event lambda.  Then need a way of getting all listeners (page class probably)
+    }
+
 }
 
 abstract class DisplayElement<E : DisplayElement<E>>(tag: String, parent: ICanHaveElement) : Element<E>(tag, parent),

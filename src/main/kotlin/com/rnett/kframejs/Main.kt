@@ -1,12 +1,18 @@
 package com.rnett.kframejs
 
-import com.rnett.kframejs.dom.div
-import com.rnett.kframejs.dom.p
-import com.rnett.kframejs.dom.title
+import com.rnett.kframejs.dom.*
 import com.rnett.kframejs.structure.Body
 import com.rnett.kframejs.structure.Head
+import com.rnett.kframejs.structure.StandardDisplayElement
 import com.rnett.kframejs.structure.styles.Color
-import com.rnett.kframejs.structure.styles.percent
+
+/*TODO List:
+    data
+    better handling of dom navigation
+    script via lambda?
+
+    site/multipage stuff
+*/
 
 inline fun main(args: Array<String>) {
     console.log("Hello World!")
@@ -16,12 +22,30 @@ inline fun main(args: Array<String>) {
             style {
                 display = "block"
                 padding = "30px"
-                marginLeft = 20.percent
-                marginTop = 20.percent
-
-                backgroundColor = Color.Orange
             }
-            p("Hello World")
+            val para = p("Hello World")
+            br(2)
+            button {
+                +"Click Me!"
+                on.click {
+                    parent<StandardDisplayElement>().style {
+                        if (backgroundColor == Color.Orange)
+                            backgroundColor = Color.Lightblue
+                        else
+                            backgroundColor = Color.Orange
+                    }
+                }
+                on.click {
+                    para.innerHTML += "!"
+                }
+            }
+            br(2)
+            button {
+                +"Reset !s (Double Click)"
+                on.dblclick {
+                    para.innerHTML = "Hello World"
+                }
+            }
         }
         Head.title {
             +"KFrame JS Test"
