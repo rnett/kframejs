@@ -9,6 +9,7 @@ sealed class Color {
     abstract val alpha: Float
     abstract fun toCSS(): String
 
+    //TODO this is not inherited by sub classes.  look into and make bug report
     override fun toString(): String = toCSS()
 
     val css get() = toCSS()
@@ -375,6 +376,8 @@ data class NamedColor internal constructor(val name: String, val red: Int, val g
 
     override fun getRGB(): Triple<Int, Int, Int> = Triple(red, green, blue)
 
+    override fun toString(): String = toCSS()
+
     override val alpha: Float
         get() = if (this == Transparent) 0f else 1f
 
@@ -415,6 +418,8 @@ data class HexColor(var hexString: String) : Color() {
         }
 
     override fun toCSS(): String = hexString
+
+    override fun toString(): String = toCSS()
 }
 
 data class HslColor(var hue: Int, var saturation: Int, var lightness: Int, override var alpha: Float = 0f) : Color() {
@@ -435,6 +440,8 @@ data class HslColor(var hue: Int, var saturation: Int, var lightness: Int, overr
                 HslColor(parts[0].toInt(), parts[1].toInt(), parts[2].toInt())
         }
     }
+
+    override fun toString(): String = toCSS()
 }
 
 data class RgbColor(var red: Int, var green: Int, var blue: Int, override var alpha: Float = 0f) : Color() {
@@ -454,6 +461,8 @@ data class RgbColor(var red: Int, var green: Int, var blue: Int, override var al
                 RgbColor(parts[0].toInt(), parts[1].toInt(), parts[2].toInt())
         }
     }
+
+    override fun toString(): String = toCSS()
 }
 
 data class RawColor(var raw: String) : Color() {
@@ -463,6 +472,8 @@ data class RawColor(var raw: String) : Color() {
 
     override fun toCSS(): String = raw
 
+
+    override fun toString(): String = toCSS()
 }
 
 fun Int.formatHex(): String = this.toString(16).padStart(2, '0').takeLast(2)

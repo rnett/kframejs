@@ -68,7 +68,7 @@ class Style(val element: AnyElement) : AttrDelegatableMap() {
     val byColor get() = byCustom(null, { it?.let { Color(it) } }, { it!!.css }, true)
     val bySize get() = byCustom(null, { it?.let { Size(it) } }, { it!!.css }, true)
 
-    operator fun invoke(builder: Style.() -> Unit): Style {
+    inline operator fun invoke(builder: Style.() -> Unit): Style {
         builder()
         return this
     }

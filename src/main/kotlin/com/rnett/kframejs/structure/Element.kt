@@ -2,9 +2,7 @@ package com.rnett.kframejs.structure
 
 import org.w3c.dom.Text
 import org.w3c.dom.events.Event
-import org.w3c.dom.get
 import kotlin.browser.document
-import kotlin.reflect.KProperty
 import org.w3c.dom.Element as W3Element
 
 @DslMarker
@@ -18,27 +16,12 @@ typealias AnyElement = Element<*>
 
 interface ICanHaveElement {
     val underlying: W3Element
+    val page: Page
 }
 
-class W3ElementWrapper(override val underlying: W3Element) : ICanHaveElement
+class W3ElementWrapper(override val underlying: W3Element, override val page: Page) : ICanHaveElement
 
-fun W3Element.kframeWrapper() = W3ElementWrapper(this)
-
-@KFrameElementDSL
-object Body : IDisplayElement {
-    override val underlying: W3Element
-        get() = document.getElementsByTagName("body")[0]!!
-}
-
-@KFrameElementDSL
-object Head : IMetaElement {
-    override val underlying: W3Element
-        get() = document.getElementsByTagName("head")[0]!!
-}
-
-abstract class Element<E : Element<E>>(val tag: String, parent: ICanHaveElement) : ICanHaveElement {
-
-    constructor(tag: String, parent: AnyElement) : this(tag, parent.underlying.kframeWrapper())
+abstract class Element<E : Element<E>>(val tag: String, val parent: ICanHaveElement) : ICanHaveElement {
 
     override val underlying: W3Element = parent.underlying.appendChild(document.createElement(tag)) as W3Element
 
@@ -46,7 +29,10 @@ abstract class Element<E : Element<E>>(val tag: String, parent: ICanHaveElement)
         if (parent is AnyElement) {
             parent._children.add(this)
         }
+        page.addElement(this)
     }
+
+    override val page get() = parent.page
 
     val attributes = Attributes(this)
     val style = Style(this)
@@ -61,12 +47,10 @@ abstract class Element<E : Element<E>>(val tag: String, parent: ICanHaveElement)
     private val _children = mutableListOf<AnyElement>()
     val children = _children.toList()
 
-    val rawParent = parent
-
     inline fun <reified P : Element<P>> parent(): P {
-        if (rawParent is P)
-            return rawParent
-        else throw ClassCastException("Node is at the top of the tree of KFrame nodes.  Use rawParent instead")
+        if (parent is P)
+            return parent
+        else throw ClassCastException("Node is at the top of the tree of KFrame nodes.  Use parent property instead")
     }
 
     val on = Events(this as E)
@@ -125,12 +109,13 @@ abstract class Element<E : Element<E>>(val tag: String, parent: ICanHaveElement)
         return EventHandler(this, event, useCapture, handler)
     }
 
+    //TODO getting muptiple page updates when using multiple `on`s
     inline fun <H : Event> on(
         event: String,
         useCapture: Boolean = false,
         crossinline handler: (H) -> Unit
     ): EventHandler {
-        val actualHandler: (Event) -> Unit = { handler(it as H) }
+        val actualHandler: (Event) -> Unit = { handler(it as H); page.update() }
         underlying.addEventListener(event, actualHandler, useCapture)
         return EventHandler(this, event, useCapture, actualHandler)
     }
@@ -138,9 +123,65 @@ abstract class Element<E : Element<E>>(val tag: String, parent: ICanHaveElement)
     inline fun String.on(useCapture: Boolean = false, noinline handler: (Event) -> Unit) = on(this, useCapture, handler)
 
 
-    fun bound(vararg props: KProperty<*>, builder: ElementBuilder<in E>) {
-        //TODO need a way of intercepting events.  Can add to on event lambda.  Then need a way of getting all listeners (page class probably)
+    private var myBinding: Binding? = null
+
+    fun update() {
+        myBinding?.checkAndUpdate()
     }
+
+    fun bindNow(cond: BindingCondition): E {
+        if (myBinding != null)
+            throw BindingException()
+        else
+            myBinding = Binding(this, cond, StateBindingValue(innerHTML, attributes.toList().toMap()))
+
+        return this as E
+    }
+
+    @BindingDSL
+    fun bindNow(cond: () -> Any?) = bindNow(FunctionBindingCondition(cond))
+
+    @BindingDSL
+    fun bindNow(cond: () -> Boolean) = bindNow(BooleanBindingCondition(cond))
+
+    @BindingDSL
+    fun bound(cond: BindingCondition, builders: List<ElementBuilder<in E>>): E {
+        if (myBinding != null)
+            throw BindingException()
+        else
+            myBinding = Binding(this, cond, BuildersBindingValue(builders))
+
+        return this as E
+    }
+
+    @BindingDSL
+    fun bound(cond: BindingCondition, builder: ElementBuilder<in E>) = bound(cond, listOf(builder))
+
+    @BindingDSL
+    operator fun invoke(cond: BindingCondition, builder: ElementBuilder<in E>) = bound(cond, builder)
+
+    @BindingDSL
+    fun bound(cond: () -> Any?, builders: List<ElementBuilder<in E>>) = bound(FunctionBindingCondition(cond), builders)
+
+    @BindingDSL
+    fun bound(cond: () -> Any?, builder: ElementBuilder<in E>) = bound(cond, listOf(builder))
+
+    @BindingDSL
+    operator fun invoke(cond: () -> Any?, builder: ElementBuilder<in E>) = bound(cond, builder)
+
+    @BindingDSL
+    fun bound(cond: () -> Boolean, builders: List<ElementBuilder<in E>>) =
+        bound(FunctionBindingCondition(cond), builders)
+
+    @BindingDSL
+    fun bound(cond: () -> Boolean, builder: ElementBuilder<in E>) = bound(cond, listOf(builder))
+
+    @BindingDSL
+    operator fun invoke(cond: () -> Boolean, builder: ElementBuilder<in E>) = bound(cond, builder)
+
+    @BindingDSL
+    fun ElementBuilder<in E>.binding(builder: FunctionBindingCondition.Builder.() -> Unit) =
+        bound(com.rnett.kframejs.structure.binding(builder), this)
 
 }
 
@@ -160,6 +201,7 @@ typealias StandardMetaElementBuilder = ElementBuilder<StandardMetaElement>
 
 fun ICanHaveElement.metaElement(tag: String) = StandardMetaElement(tag, this)
 
+//TODO function updating text elements
 
 class TextElement(private var _underlying: Text) {
     var value: String

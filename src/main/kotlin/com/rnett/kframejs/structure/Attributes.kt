@@ -39,4 +39,10 @@ class Attributes(val element: AnyElement) : AttrDelegatableMap() {
         element.underlying.removeAttribute(key)
         return old
     }
+
+    inline operator fun invoke(builder: Attributes.() -> Unit): Attributes {
+        builder()
+        return this
+    }
+
 }

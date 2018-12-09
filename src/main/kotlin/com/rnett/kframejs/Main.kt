@@ -1,9 +1,9 @@
 package com.rnett.kframejs
 
 import com.rnett.kframejs.dom.*
-import com.rnett.kframejs.structure.Body
-import com.rnett.kframejs.structure.Head
 import com.rnett.kframejs.structure.StandardDisplayElement
+import com.rnett.kframejs.structure.binding
+import com.rnett.kframejs.structure.page
 import com.rnett.kframejs.structure.styles.Color
 
 /*TODO List:
@@ -14,11 +14,11 @@ import com.rnett.kframejs.structure.styles.Color
     site/multipage stuff
 */
 
-inline fun main(args: Array<String>) {
+fun main(args: Array<String>) {
     console.log("Hello World!")
 
     page {
-        Body.div {
+        var outer = body.div {
             style {
                 display = "block"
                 padding = "30px"
@@ -46,8 +46,15 @@ inline fun main(args: Array<String>) {
                     para.innerHTML = "Hello World"
                 }
             }
+            p().bound(
+                binding {
+                    bind(para.style.backgroundColor.toString())
+                }) {
+                +parent<StandardDisplayElement>().style.backgroundColor.toString()
+                console.log("Page Update")
+            }
         }
-        Head.title {
+        head.title {
             +"KFrame JS Test"
         }
     }
