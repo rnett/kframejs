@@ -37,8 +37,10 @@ data class FunctionBindingCondition(val func: AnyBinding) : BindingCondition() {
 
 
 @BindingDSL
-fun binding(builder: FunctionBindingCondition.Builder.() -> Unit) = FunctionBindingCondition {
-    FunctionBindingCondition.Builder().apply(builder).values()
+fun <R> binding(builder: FunctionBindingCondition.Builder.() -> R) = FunctionBindingCondition {
+    val b = FunctionBindingCondition.Builder()
+    val result = builder(b)
+    b.values().plus(result)
 }
 
 data class BooleanBindingCondition(val func: BoolBinding) : BindingCondition() {

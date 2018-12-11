@@ -39,18 +39,21 @@ abstract class CanHaveElement(val page: Page, val underlying: W3Element) : ICanH
 
         internalAdd(element)
     }
+
+    @BindingDSL
+    infix fun BindingCondition.bindAll(builder: () -> Unit) = this@CanHaveElement.bindAll(this, builder)
 }
 
 open class W3ElementWrapper(underlying: W3Element, page: Page) : CanHaveElement(page, underlying) {
     override fun internalAdd(element: AnyElement) {}
 }
 
-abstract class Element<E : Element<E>>(val tag: String, val parent: CanHaveElement) : CanHaveElement(
-    parent.page, parent.underlying.appendChild(document.createElement(tag)) as W3Element
+abstract class Element<E : Element<E>>(val tag: String, val rawParent: CanHaveElement) : CanHaveElement(
+    rawParent.page, rawParent.underlying.appendChild(document.createElement(tag)) as W3Element
 ) {
 
     init {
-        parent.add(this)
+        rawParent.add(this)
     }
 
     override fun internalAdd(element: AnyElement) {
@@ -71,10 +74,18 @@ abstract class Element<E : Element<E>>(val tag: String, val parent: CanHaveEleme
     val children = _children.toList()
 
     inline fun <reified P : Element<P>> parent(): P {
-        if (parent is P)
-            return parent
+        if (rawParent is P)
+            return rawParent
         else throw ClassCastException("Node is at the top of the tree of KFrame nodes.  Use parent property instead")
     }
+
+    val parent: AnyElement
+        get() {
+            if (rawParent is AnyElement)
+                return rawParent
+            else throw ClassCastException("Node is at the top of the tree of KFrame nodes.  Use parent property instead")
+        }
+
 
     fun remove() {
         underlying.remove()

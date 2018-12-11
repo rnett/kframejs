@@ -21,6 +21,8 @@ inline fun page(crossinline builder: Page.() -> Unit): Page {
     return page
 }
 
+//TODO make head and body actual elements
+
 class Page() {
     private val elements: MutableSet<AnyElement> = mutableSetOf()
     private val watches: MutableSet<Watch> = mutableSetOf()
@@ -37,6 +39,9 @@ class Page() {
 
     internal fun addElement(element: AnyElement) = elements.add(element)
     internal fun addWatch(watch: Watch) = watches.add(watch)
+
+    @BindingDSL
+    infix fun BindingCondition.watch(update: () -> Unit) = this@Page.watch(this, update)
 }
 
 class Body internal constructor(page: Page) : W3ElementWrapper(document.getElementsByTagName("body")[0]!!, page),

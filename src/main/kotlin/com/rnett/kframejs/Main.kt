@@ -1,11 +1,11 @@
 package com.rnett.kframejs
 
 import com.rnett.kframejs.dom.*
-import com.rnett.kframejs.structure.*
+import com.rnett.kframejs.structure.binding
+import com.rnett.kframejs.structure.page
 import com.rnett.kframejs.structure.styles.Color
 
 /*TODO List:
-    data
     better handling of dom navigation
     script via lambda?
 
@@ -26,7 +26,7 @@ fun main(args: Array<String>) {
             button {
                 +"Click Me!"
                 on.click {
-                    parent<StandardDisplayElement>().style {
+                    parent.style {
                         if (backgroundColor == Color.Orange)
                             backgroundColor = Color.Lightblue
                         else
@@ -50,14 +50,12 @@ fun main(args: Array<String>) {
                 console.log("Page Update")
             }*/
             val color = p()
-            //TODO shouldn't work b/c it is on para
-            watch(binding {
-                bind(style.backgroundColor)
-            }) {
+
+            binding { style.backgroundColor } watch {
                 color.innerHTML = style.backgroundColor.toString()
             }
 
-            bindAll({ style.backgroundColor }.binding()) {
+            binding { style.backgroundColor } bindAll {
                 val s = style.backgroundColor.toString()
                 p {
                     +"1: "
