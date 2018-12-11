@@ -14,25 +14,48 @@ typealias ElementBuilder<E> = E.() -> Unit
 typealias AnyElementBuilder = ElementBuilder<*>
 typealias AnyElement = Element<*>
 
-interface ICanHaveElement {
-    val underlying: W3Element
-    val page: Page
-}
+interface ICanHaveElement
 
-class W3ElementWrapper(override val underlying: W3Element, override val page: Page) : ICanHaveElement
+abstract class CanHaveElement(val page: Page, val underlying: W3Element) : ICanHaveElement {
+    protected abstract fun internalAdd(element: AnyElement)
 
-abstract class Element<E : Element<E>>(val tag: String, val parent: ICanHaveElement) : ICanHaveElement {
+    private var subs = 0
+    private val subscribers = mutableMapOf<Int, (AnyElement) -> Unit>()
 
-    override val underlying: W3Element = parent.underlying.appendChild(document.createElement(tag)) as W3Element
-
-    init {
-        if (parent is AnyElement) {
-            parent._children.add(this)
-        }
-        page.addElement(this)
+    fun subscribeOnAdd(sub: (AnyElement) -> Unit): Int {
+        val s = subs
+        subs++
+        subscribers[s] = sub
+        return s
     }
 
-    override val page get() = parent.page
+    fun removeAddSubscriber(sub: Int) {
+        subscribers.remove(sub)
+    }
+
+    internal fun add(element: AnyElement) {
+        subscribers.values.forEach { it(element) }
+        page.addElement(element)
+
+        internalAdd(element)
+    }
+}
+
+open class W3ElementWrapper(underlying: W3Element, page: Page) : CanHaveElement(page, underlying) {
+    override fun internalAdd(element: AnyElement) {}
+}
+
+abstract class Element<E : Element<E>>(val tag: String, val parent: CanHaveElement) : CanHaveElement(
+    parent.page, parent.underlying.appendChild(document.createElement(tag)) as W3Element
+) {
+
+    init {
+        parent.add(this)
+    }
+
+    override fun internalAdd(element: AnyElement) {
+        _children.add(element)
+    }
 
     val attributes = Attributes(this)
     val style = Style(this)
@@ -51,6 +74,10 @@ abstract class Element<E : Element<E>>(val tag: String, val parent: ICanHaveElem
         if (parent is P)
             return parent
         else throw ClassCastException("Node is at the top of the tree of KFrame nodes.  Use parent property instead")
+    }
+
+    fun remove() {
+        underlying.remove()
     }
 
     val on = Events(this as E)
@@ -109,13 +136,22 @@ abstract class Element<E : Element<E>>(val tag: String, val parent: ICanHaveElem
         return EventHandler(this, event, useCapture, handler)
     }
 
+    val currentListeners = mutableSetOf<String>()
+
     //TODO getting muptiple page updates when using multiple `on`s
-    inline fun <H : Event> on(
+    fun <H : Event> on(
         event: String,
         useCapture: Boolean = false,
-        crossinline handler: (H) -> Unit
+        handler: (H) -> Unit
     ): EventHandler {
-        val actualHandler: (Event) -> Unit = { handler(it as H); page.update() }
+        val actualHandler: (Event) -> Unit =
+            if (event in currentListeners) {
+                { handler(it as H) }
+            } else {
+                currentListeners.add(event);
+                { handler(it as H); page.update(this, event) }
+            }
+
         underlying.addEventListener(event, actualHandler, useCapture)
         return EventHandler(this, event, useCapture, actualHandler)
     }
@@ -129,6 +165,7 @@ abstract class Element<E : Element<E>>(val tag: String, val parent: ICanHaveElem
         myBinding?.checkAndUpdate()
     }
 
+    @BindingDSL
     fun bindNow(cond: BindingCondition): E {
         if (myBinding != null)
             throw BindingException()
@@ -159,47 +196,23 @@ abstract class Element<E : Element<E>>(val tag: String, val parent: ICanHaveElem
 
     @BindingDSL
     operator fun invoke(cond: BindingCondition, builder: ElementBuilder<in E>) = bound(cond, builder)
-
-    @BindingDSL
-    fun bound(cond: () -> Any?, builders: List<ElementBuilder<in E>>) = bound(FunctionBindingCondition(cond), builders)
-
-    @BindingDSL
-    fun bound(cond: () -> Any?, builder: ElementBuilder<in E>) = bound(cond, listOf(builder))
-
-    @BindingDSL
-    operator fun invoke(cond: () -> Any?, builder: ElementBuilder<in E>) = bound(cond, builder)
-
-    @BindingDSL
-    fun bound(cond: () -> Boolean, builders: List<ElementBuilder<in E>>) =
-        bound(FunctionBindingCondition(cond), builders)
-
-    @BindingDSL
-    fun bound(cond: () -> Boolean, builder: ElementBuilder<in E>) = bound(cond, listOf(builder))
-
-    @BindingDSL
-    operator fun invoke(cond: () -> Boolean, builder: ElementBuilder<in E>) = bound(cond, builder)
-
-    @BindingDSL
-    fun ElementBuilder<in E>.binding(builder: FunctionBindingCondition.Builder.() -> Unit) =
-        bound(com.rnett.kframejs.structure.binding(builder), this)
-
 }
 
-abstract class DisplayElement<E : DisplayElement<E>>(tag: String, parent: ICanHaveElement) : Element<E>(tag, parent),
+abstract class DisplayElement<E : DisplayElement<E>>(tag: String, parent: CanHaveElement) : Element<E>(tag, parent),
     IDisplayElement
 
-abstract class MetaElement<E : MetaElement<E>>(tag: String, parent: ICanHaveElement) : Element<E>(tag, parent),
-    IDisplayElement
+abstract class MetaElement<E : MetaElement<E>>(tag: String, parent: CanHaveElement) : Element<E>(tag, parent),
+    IMetaElement
 
-class StandardDisplayElement(tag: String, parent: ICanHaveElement) : DisplayElement<StandardDisplayElement>(tag, parent)
+class StandardDisplayElement(tag: String, parent: CanHaveElement) : DisplayElement<StandardDisplayElement>(tag, parent)
 typealias StandardDisplayElementBuilder = ElementBuilder<StandardDisplayElement>
 
-fun ICanHaveElement.displayElement(tag: String) = StandardDisplayElement(tag, this)
+fun ICanHaveElement.displayElement(tag: String) = StandardDisplayElement(tag, this as CanHaveElement)
 
-class StandardMetaElement(tag: String, parent: ICanHaveElement) : MetaElement<StandardMetaElement>(tag, parent)
+class StandardMetaElement(tag: String, parent: CanHaveElement) : MetaElement<StandardMetaElement>(tag, parent)
 typealias StandardMetaElementBuilder = ElementBuilder<StandardMetaElement>
 
-fun ICanHaveElement.metaElement(tag: String) = StandardMetaElement(tag, this)
+fun ICanHaveElement.metaElement(tag: String) = StandardMetaElement(tag, this as CanHaveElement)
 
 //TODO function updating text elements
 

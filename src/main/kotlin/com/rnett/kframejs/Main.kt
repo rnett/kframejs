@@ -1,9 +1,7 @@
 package com.rnett.kframejs
 
 import com.rnett.kframejs.dom.*
-import com.rnett.kframejs.structure.StandardDisplayElement
-import com.rnett.kframejs.structure.binding
-import com.rnett.kframejs.structure.page
+import com.rnett.kframejs.structure.*
 import com.rnett.kframejs.structure.styles.Color
 
 /*TODO List:
@@ -46,12 +44,31 @@ fun main(args: Array<String>) {
                     para.innerHTML = "Hello World"
                 }
             }
-            p().bound(
-                binding {
-                    bind(para.style.backgroundColor.toString())
-                }) {
+
+            /*p().bound( {style.backgroundColor}.binding() ) {
                 +parent<StandardDisplayElement>().style.backgroundColor.toString()
                 console.log("Page Update")
+            }*/
+            val color = p()
+            //TODO shouldn't work b/c it is on para
+            watch(binding {
+                bind(style.backgroundColor)
+            }) {
+                color.innerHTML = style.backgroundColor.toString()
+            }
+
+            bindAll({ style.backgroundColor }.binding()) {
+                val s = style.backgroundColor.toString()
+                p {
+                    +"1: "
+                    +s
+                }
+                div {
+                    p {
+                        +"2: "
+                        +s
+                    }
+                }
             }
         }
         head.title {

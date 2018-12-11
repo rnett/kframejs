@@ -4,16 +4,19 @@ package com.rnett.kframejs.structure
 @Target(AnnotationTarget.CLASS, AnnotationTarget.TYPEALIAS, AnnotationTarget.TYPE, AnnotationTarget.FUNCTION)
 annotation class BindingDSL
 
+typealias AnyBinding = () -> Any?
+typealias BoolBinding = () -> Boolean
+
 sealed class BindingCondition {
     abstract fun needsUpdate(): Boolean
     abstract fun update()
 }
 
-data class FunctionBindingCondition(val func: () -> Any?) : BindingCondition() {
+data class FunctionBindingCondition(val func: AnyBinding) : BindingCondition() {
 
     private var lastValue: Any? = func()
 
-    override fun needsUpdate() = func() == lastValue
+    override fun needsUpdate(): Boolean = func() != lastValue
 
     override fun update() {
         lastValue = func()
@@ -32,12 +35,13 @@ data class FunctionBindingCondition(val func: () -> Any?) : BindingCondition() {
     }
 }
 
+
 @BindingDSL
 fun binding(builder: FunctionBindingCondition.Builder.() -> Unit) = FunctionBindingCondition {
     FunctionBindingCondition.Builder().apply(builder).values()
 }
 
-data class BooleanBindingCondition(val func: () -> Boolean) : BindingCondition() {
+data class BooleanBindingCondition(val func: BoolBinding) : BindingCondition() {
     override fun needsUpdate() = func()
 
     override fun update() {}
@@ -76,3 +80,38 @@ class BindingException : RuntimeException("Binding already set")
 
 //TODO watches on binding conditions.  so that I can have an update without a reset
 //  something like div{ watch{ cond builder } then {} }
+
+data class Watch(val condition: BindingCondition, val update: () -> Unit) {
+    fun doUpdate() {
+        if (condition.needsUpdate()) {
+            condition.update()
+            update()
+        }
+    }
+}
+
+fun AnyBinding.binding() = FunctionBindingCondition(this)
+fun BoolBinding.valueBinding() = FunctionBindingCondition(this)
+fun BoolBinding.binding() = BooleanBindingCondition(this)
+
+/**
+ * WARNING: Do not add elements inside a watch.  They will be updated every time the value changes
+ */
+@BindingDSL
+fun Page.watch(cond: BindingCondition, update: () -> Unit) {
+    addWatch(Watch(cond, update))
+}
+
+@BindingDSL
+fun CanHaveElement.bindAll(binding: BindingCondition, builder: () -> Unit) {
+    val added = mutableSetOf<AnyElement>()
+    page.watch(binding) {
+        added.forEach { it.remove() }
+        added.clear()
+        val listenerID = subscribeOnAdd {
+            added.add(it)
+        }
+        builder()
+        removeAddSubscriber(listenerID)
+    }
+}

@@ -23,9 +23,11 @@ inline fun page(crossinline builder: Page.() -> Unit): Page {
 
 class Page() {
     private val elements: MutableSet<AnyElement> = mutableSetOf()
+    private val watches: MutableSet<Watch> = mutableSetOf()
 
-    fun update() {
+    fun update(sender: AnyElement? = null, event: String? = null) {
         elements.forEach { it.update() }
+        watches.forEach { it.doUpdate() }
     }
 
     fun W3Element.kframeWrapper() = W3ElementWrapper(this, this@Page)
@@ -33,18 +35,16 @@ class Page() {
     val head get() = Head(this)
     val body get() = Body(this)
 
-    internal fun addElement(element: AnyElement) {
-        elements.add(element)
-    }
+    internal fun addElement(element: AnyElement) = elements.add(element)
+    internal fun addWatch(watch: Watch) = watches.add(watch)
 }
 
-class Body internal constructor(override val page: Page) : IDisplayElement {
-    override val underlying: W3Element
-        get() = document.getElementsByTagName("body")[0]!!
+class Body internal constructor(page: Page) : W3ElementWrapper(document.getElementsByTagName("body")[0]!!, page),
+    IDisplayElement {
+    override fun internalAdd(element: AnyElement) {}
 }
 
-class Head internal constructor(override val page: Page) : IMetaElement {
-    override val underlying: W3Element
-        get() = document.getElementsByTagName("head")[0]!!
-
+class Head internal constructor(page: Page) : W3ElementWrapper(document.getElementsByTagName("head")[0]!!, page),
+    IMetaElement {
+    override fun internalAdd(element: AnyElement) {}
 }

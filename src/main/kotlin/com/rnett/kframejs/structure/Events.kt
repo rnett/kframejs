@@ -19,7 +19,7 @@ fun AnyElement.removeEventHandler(eh: EventHandler) = if (eh.element == this) eh
 
 class Events<E : Element<E>>(val element: E) {
 
-    inline fun <H : Event> on(event: String, useCapture: Boolean = false, crossinline handler: (H) -> Unit) =
+    inline fun <H : Event> on(event: String, useCapture: Boolean = false, noinline handler: (H) -> Unit) =
         element.on(event, useCapture, handler)
 
     fun abort(useCapture: Boolean = false, handler: (UIEvent) -> Unit) = on("abort", useCapture, handler)
