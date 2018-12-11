@@ -1,22 +1,23 @@
 package com.rnett.kframejs
 
 import com.rnett.kframejs.dom.*
-import com.rnett.kframejs.structure.binding
-import com.rnett.kframejs.structure.page
+import com.rnett.kframejs.structure.*
 import com.rnett.kframejs.structure.styles.Color
 
 /*TODO List:
-    better handling of dom navigation
+    better syntax for jquery selectors (and test them)
+    some differentiation between or and and (which is default?)  anyClass/allClasses, etc?
+    data bound text
     script via lambda?
 
     site/multipage stuff
 */
 
 fun main(args: Array<String>) {
-    console.log("Hello World!")
 
     page {
         var outer = body.div {
+            id = "test"
             style {
                 display = "block"
                 padding = "30px"
@@ -42,6 +43,9 @@ fun main(args: Array<String>) {
                 +"Reset !s (Double Click)"
                 on.dblclick {
                     para.innerHTML = "Hello World"
+
+                    `$` { id("test").child().tag("div") }() { style.backgroundColor = Color.Green }
+
                 }
             }
 

@@ -71,7 +71,7 @@ abstract class Element<E : Element<E>>(val tag: String, val rawParent: CanHaveEl
     var title by attributes
 
     private val _children = mutableListOf<AnyElement>()
-    val children = _children.toList()
+    val children get() = _children.toList()
 
     inline fun <reified P : Element<P>> parent(): P {
         if (rawParent is P)

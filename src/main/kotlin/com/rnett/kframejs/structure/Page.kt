@@ -24,11 +24,13 @@ inline fun page(crossinline builder: Page.() -> Unit): Page {
 //TODO make head and body actual elements
 
 class Page() {
-    private val elements: MutableSet<AnyElement> = mutableSetOf()
+    private val _elements: MutableSet<AnyElement> = mutableSetOf()
     private val watches: MutableSet<Watch> = mutableSetOf()
 
+    val elements get() = _elements.toSet()
+
     fun update(sender: AnyElement? = null, event: String? = null) {
-        elements.forEach { it.update() }
+        _elements.forEach { it.update() }
         watches.forEach { it.doUpdate() }
     }
 
@@ -37,7 +39,7 @@ class Page() {
     val head get() = Head(this)
     val body get() = Body(this)
 
-    internal fun addElement(element: AnyElement) = elements.add(element)
+    internal fun addElement(element: AnyElement) = _elements.add(element)
     internal fun addWatch(watch: Watch) = watches.add(watch)
 
     @BindingDSL
