@@ -5,8 +5,9 @@ import com.rnett.kframejs.structure.*
 import com.rnett.kframejs.structure.styles.Color
 
 /*TODO List:
+    better binding syntax
     better syntax for jquery selectors (and test them)
-    some differentiation between or and and (which is default?)  anyClass/allClasses, etc?
+    some way to go back up the tree
     data bound text
     script via lambda?
 
@@ -21,6 +22,12 @@ fun main(args: Array<String>) {
             style {
                 display = "block"
                 padding = "30px"
+            }
+            div {
+                id = "test2"
+                div {
+                    +"Green Test"
+                }
             }
             val para = p("Hello World")
             br(2)
@@ -44,7 +51,8 @@ fun main(args: Array<String>) {
                 on.dblclick {
                     para.innerHTML = "Hello World"
 
-                    `$` { id("test").child().tag("div") }() { style.backgroundColor = Color.Green }
+                    `$`.id("test", "test2").child.tag("div")[page]{ style.backgroundColor = Color.Green }
+                    `$`("#test,#test2 > div")[page]{ style.backgroundColor = Color.Red }
 
                 }
             }

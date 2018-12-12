@@ -104,6 +104,8 @@ fun Page.watch(cond: BindingCondition, update: () -> Unit) {
     addWatch(Watch(cond, update))
 }
 
+//TODO want something like binding { style.backgroundColor } bindAll {} syntax for single elements
+
 @BindingDSL
 fun CanHaveElement.bindAll(binding: BindingCondition, builder: () -> Unit) {
     val added = mutableSetOf<AnyElement>()

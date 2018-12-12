@@ -11,4 +11,6 @@ inline fun <E : Element<E>> Iterable<AnyElement>.filterType() = mapNotNull {
     it as? E
 }
 
+fun AnyElement.descendants(): List<AnyElement> = children + children.flatMap { it.descendants() }
+
 inline operator fun <E : AnyElement> Iterable<E>.invoke(func: E.() -> Unit) = applyForEach(func)

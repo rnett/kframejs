@@ -44,6 +44,8 @@ class Page() {
 
     @BindingDSL
     infix fun BindingCondition.watch(update: () -> Unit) = this@Page.watch(this, update)
+
+    operator fun Selector.invoke() = this@Page[this]
 }
 
 class Body internal constructor(page: Page) : W3ElementWrapper(document.getElementsByTagName("body")[0]!!, page),

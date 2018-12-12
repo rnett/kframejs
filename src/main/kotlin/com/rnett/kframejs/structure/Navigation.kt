@@ -1,5 +1,7 @@
 package com.rnett.kframejs.structure
 
+import com.rnett.kframejs.descendants
+
 @DslMarker
 @Target(
     AnnotationTarget.CLASS,
@@ -11,15 +13,26 @@ package com.rnett.kframejs.structure
 )
 annotation class SelectorDSL
 
-class Selector private constructor(private val selectors: MutableList<SelectorElement>) {
+@DslMarker
+@Target(
+    AnnotationTarget.CLASS,
+    AnnotationTarget.TYPEALIAS,
+    AnnotationTarget.TYPE,
+    AnnotationTarget.FUNCTION,
+    AnnotationTarget.PROPERTY_GETTER,
+    AnnotationTarget.PROPERTY
+)
+annotation class SelectorSeperatorDSL
+
+class Selector private constructor(private val ms: MutableList<SelectorElement>) {
     constructor() : this(mutableListOf())
 
-    fun copy() = Selector(mutableListOf(*selectors.toTypedArray()))
+    fun copy() = Selector(mutableListOf(*ms.toTypedArray()))
 
     fun select(start: List<AnyElement>): List<AnyElement> {
         var candidates = start
-        for (selector in selectors) {
-            candidates = selector.select(candidates)
+        for (m in ms) {
+            candidates = m.select(candidates)
         }
 
         return candidates.distinct()
@@ -27,40 +40,40 @@ class Selector private constructor(private val selectors: MutableList<SelectorEl
 
     internal fun addFilter(filter: SelectorFilter) = copy().apply {
 
-        if (selectors.size == 0 || selectors.last().next != null)
-            selectors.add(SelectorElement(mutableListOf(filter), null))
+        if (ms.size == 0 || ms.last().next != null)
+            ms.add(SelectorElement(mutableListOf(filter), null))
         else
-            selectors.last().addFilter(filter)
+            ms.last().addFilter(filter)
     }
 
     internal fun addSeperator(separator: SelectorSeparator) = copy().apply {
-        if (selectors.last().next == null)
-            selectors.last()._next = separator
+        if (ms.last().next == null)
+            ms.last()._next = separator
         else
             throw FilterException("Can not add two separators in a row")
     }
 
 }
 
-@SelectorDSL
+@SelectorSeperatorDSL
 val `$`
     get() = Selector()
+@SelectorSeperatorDSL
+val blankSelector
+    get() = `$`
 
 class FilterException(message: String) : RuntimeException(message)
 
-data class SelectorElement(private val _filters: MutableList<SelectorFilter>, internal var _next: SelectorSeparator?) {
+data class SelectorElement(
+    private val _filters: MutableList<SelectorFilter>,
+    internal var _next: SelectorSeparator?
+) {
 
     val next get() = _next
     val filters get() = _filters.toList()
 
     fun select(incoming: List<AnyElement>): List<AnyElement> {
         val candidates = incoming.filter { element -> filters.all { it.matches(element) } }
-
-        console.log("Searching: ", incoming.map { it.underlying }.toTypedArray())
-        console.log("With: ", filters.toTypedArray())
-        console.log("Passed: ", candidates.map { it.underlying }.toTypedArray())
-
-        console.log("Moving on to: ", next)
 
         return if (next == null)
             candidates.distinct()
@@ -74,88 +87,49 @@ data class SelectorElement(private val _filters: MutableList<SelectorFilter>, in
 
 }
 
-typealias SelectorBuilder = Selector.() -> Selector
-
-@SelectorDSL
-fun Selector.tag(tag: String) = addFilter(SelectorFilter.Tag(tag))
-
-@SelectorDSL
-fun Selector.klass(klass: String) = addFilter(SelectorFilter.Class(klass))
-
-@SelectorDSL
-fun Selector.id(id: String) = addFilter(SelectorFilter.ID(id))
-
-@SelectorDSL
-fun Selector.child(position: Int) = addFilter(SelectorFilter.ChildPosition(position))
-
-@SelectorDSL
-fun Selector.lastChild(position: Int) = addFilter(SelectorFilter.BackwardsChildPosition(position))
-
-@SelectorDSL
-fun Selector.firstChild() = child(0)
-
-@SelectorDSL
-fun Selector.lastChild() = child(-1)
-
-@SelectorDSL
-fun Selector.onlyChild() = addFilter(SelectorFilter.OnlyChild())
-
-@SelectorDSL
-fun Selector.odd() = addFilter(SelectorFilter.OddEven(true))
-
-@SelectorDSL
-fun Selector.even() = addFilter(SelectorFilter.OddEven(false))
-
-@SelectorDSL
-fun Selector.child() = addSeperator(SelectorSeparator.Child())
-
-@SelectorDSL
-fun Selector.descendant() = addSeperator(SelectorSeparator.Descendant())
-
-@SelectorDSL
-fun Selector.nextTo() = addSeperator(SelectorSeparator.NextTo())
-
-@SelectorDSL
-fun Selector.siblings() = addSeperator(SelectorSeparator.Siblings())
-
-fun Page.select(selector: Selector): List<AnyElement> = selector.select(elements.toList())
-operator fun Page.get(selector: Selector): List<AnyElement> = select(selector)
-operator fun Page.invoke(selector: SelectorBuilder) = select(Selector().let(selector))
-fun Page.`$`(selector: Selector) = select(selector)
-fun Page.`$`(selector: SelectorBuilder) = select(Selector().let(selector))
-
-fun AnyElement.select(selector: Selector): List<AnyElement> = selector.select(this.children)
-fun AnyElement.topSelect(selector: Selector) = page.select(selector)
-
-operator fun AnyElement.get(selector: Selector) = select(selector)
-operator fun AnyElement.invoke(selector: SelectorBuilder) = select(Selector().let(selector))
-fun AnyElement.`$`(selector: Selector) = topSelect(selector)
-
 sealed class SelectorFilter {
     abstract fun matches(element: AnyElement): Boolean
 
-    data class Tag(val tag: String) : SelectorFilter() {
-        override fun matches(element: AnyElement) = tag == element.tag
+    data class Tag(val tags: List<String>) : SelectorFilter() {
+        constructor(tag: String) : this(listOf(tag))
+
+        override fun matches(element: AnyElement) = tags.any { it == element.tag }
     }
 
-    data class Class(val klass: String) : SelectorFilter() {
-        override fun matches(element: AnyElement) = klass in element.classes
+    data class Class(val classes: List<String>) : SelectorFilter() {
+        constructor(klass: String) : this(listOf(klass))
+
+        override fun matches(element: AnyElement) = classes.any { it in element.classes }
     }
 
-    data class ID(val id: String) : SelectorFilter() {
-        override fun matches(element: AnyElement) = id == element.id
+    data class ID(val ids: List<String>) : SelectorFilter() {
+        constructor(id: String) : this(listOf(id))
+
+        override fun matches(element: AnyElement) = ids.any { it == element.id }
     }
 
-    data class ChildPosition(val position: Int) : SelectorFilter() {
+    data class ChildPosition(val positions: List<Int>) : SelectorFilter() {
+        constructor(position: Int) : this(listOf(position))
+
         override fun matches(element: AnyElement) =
-            if (position == -1) element.parent.children.indexOf(element) == element.parent.children.lastIndex
-            else element.parent.children.indexOf(element) == position
+            positions.any { position ->
+                if (position == -1)
+                    element.parent.children.indexOf(element) == element.parent.children.lastIndex
+                else
+                    element.parent.children.indexOf(element) == position
+            }
     }
 
-    data class BackwardsChildPosition(val position: Int) : SelectorFilter() {
+    data class BackwardsChildPosition(val positions: List<Int>) : SelectorFilter() {
+        constructor(position: Int) : this(listOf(position))
+
         override fun matches(element: AnyElement) =
-            if (position == -1) element.parent.children.indexOf(element) == 0
-            else element.parent.children.indexOf(element) == element.parent.children.lastIndex - position
+            positions.any { position ->
+                if (position == -1)
+                    element.parent.children.indexOf(element) == 0
+                else
+                    element.parent.children.indexOf(element) == element.parent.children.lastIndex - position
+            }
     }
 
     class OnlyChild : SelectorFilter() {
@@ -174,16 +148,14 @@ sealed class SelectorFilter {
         override fun matches(element: AnyElement) = element.attributes[attribute] == value
     }
 
-    data class AttributeCustom(val attribute: String, val selector: (String?) -> Boolean?) : SelectorFilter() {
-        override fun matches(element: AnyElement) = selector(element.attributes[attribute]) == true
+    data class AttributeCustom(val attribute: String, val m: (String?) -> Boolean?) : SelectorFilter() {
+        override fun matches(element: AnyElement) = m(element.attributes[attribute]) == true
     }
 
-    data class Custom(val selector: (AnyElement) -> Boolean) : SelectorFilter() {
-        override fun matches(element: AnyElement) = selector(element)
+    data class Custom(val m: (AnyElement) -> Boolean) : SelectorFilter() {
+        override fun matches(element: AnyElement) = m(element)
     }
 }
-
-fun AnyElement.descendants(): List<AnyElement> = children + children.flatMap { it.descendants() }
 
 sealed class SelectorSeparator {
     abstract fun canidates(start: AnyElement): List<AnyElement>
@@ -206,5 +178,187 @@ sealed class SelectorSeparator {
     class Siblings : SelectorSeparator() {
         override fun canidates(start: AnyElement) = start.parent.children - start
     }
+
+    class Parent : SelectorSeparator() {
+        override fun canidates(start: AnyElement) = listOfNotNull(start.rawParent as? AnyElement)
+    }
 }
 
+
+
+typealias SelectorBuilder = Selector.() -> Selector
+
+//Note: multiple calls apply as and, mutiple args apply as or
+
+@SelectorDSL
+fun Selector.tag(tag: String) = addFilter(SelectorFilter.Tag(tag))
+
+@SelectorDSL
+fun Selector.tag(vararg tags: String) = addFilter(SelectorFilter.Tag(tags.toList()))
+
+@SelectorDSL
+fun Selector.klass(klass: String) = addFilter(SelectorFilter.Class(klass))
+
+@SelectorDSL
+fun Selector.klass(vararg classes: String) = addFilter(SelectorFilter.Class(classes.toList()))
+
+@SelectorDSL
+fun Selector.id(id: String) = addFilter(SelectorFilter.ID(id))
+
+@SelectorDSL
+fun Selector.id(vararg ids: String) = addFilter(SelectorFilter.ID(ids.toList()))
+
+@SelectorDSL
+fun Selector.childAt(position: Int) = addFilter(SelectorFilter.ChildPosition(position))
+
+@SelectorDSL
+fun Selector.childAt(vararg positions: Int) = addFilter(SelectorFilter.ChildPosition(positions.toList()))
+
+@SelectorDSL
+fun Selector.lastChildAt(position: Int) = addFilter(SelectorFilter.BackwardsChildPosition(position))
+
+@SelectorDSL
+fun Selector.lastChildAt(vararg positions: Int) = addFilter(SelectorFilter.BackwardsChildPosition(positions.toList()))
+
+@SelectorDSL
+fun Selector.firstChild() = childAt(0)
+
+@SelectorDSL
+fun Selector.lastChild() = childAt(-1)
+
+@SelectorDSL
+fun Selector.onlyChild() = addFilter(SelectorFilter.OnlyChild())
+
+@SelectorDSL
+fun Selector.odd() = addFilter(SelectorFilter.OddEven(true))
+
+@SelectorDSL
+fun Selector.even() = addFilter(SelectorFilter.OddEven(false))
+
+@SelectorDSL
+fun Selector.attributeEquals(attribute: String, value: String) =
+    addFilter(SelectorFilter.AttributeValue(attribute, value))
+
+@SelectorDSL
+fun Selector.attribute(attribute: String, passes: (String?) -> Boolean?) =
+    addFilter(SelectorFilter.AttributeCustom(attribute, passes))
+
+//TODO add first/last, see https://stackoverflow.com/questions/2946205/difference-between-first-and-first-child-not-clear
+//TODO add other hard index instead of parent index operators
+//TODO firstOfType
+
+// seperators
+
+@SelectorSeperatorDSL
+val Selector.child
+    get() = addSeperator(SelectorSeparator.Child())
+
+@SelectorSeperatorDSL
+val Selector.descendant
+    get() = addSeperator(SelectorSeparator.Descendant())
+
+@SelectorSeperatorDSL
+val Selector.nextTo
+    get() = addSeperator(SelectorSeparator.NextTo())
+
+@SelectorSeperatorDSL
+val Selector.siblings
+    get() = addSeperator(SelectorSeparator.Siblings())
+
+
+// usages
+
+infix fun Page.select(m: Selector): List<AnyElement> = m.select(elements.toList())
+operator fun Page.get(m: Selector): List<AnyElement> = select(m)
+
+infix fun AnyElement.select(m: Selector): List<AnyElement> = m.select(this.children)
+operator fun AnyElement.get(m: Selector) = select(m)
+
+infix fun AnyElement.topSelect(m: Selector) = page.select(m)
+
+infix fun Iterable<AnyElement>.select(m: Selector) = flatMap { it[m] }
+operator fun Iterable<AnyElement>.get(m: Selector) = select(m)
+
+infix fun Sequence<AnyElement>.select(m: Selector) = flatMap { it[m].asSequence() }
+operator fun Sequence<AnyElement>.get(m: Selector) = select(m)
+
+infix fun Selector.selectFrom(element: AnyElement) = element[this]
+infix fun Selector.selectFrom(elements: Iterable<AnyElement>) = elements[this]
+infix fun Selector.selectFrom(elements: Sequence<AnyElement>) = elements[this]
+infix fun Selector.selectFrom(page: Page) = page[this]
+
+operator fun Selector.get(element: AnyElement) = this selectFrom element
+operator fun Selector.get(elements: Iterable<AnyElement>) = this selectFrom elements
+operator fun Selector.get(elements: Sequence<AnyElement>) = this selectFrom elements
+operator fun Selector.get(page: Page) = this selectFrom page
+
+@SelectorSeperatorDSL
+fun `$`(jqyerySelector: String) = jquerySelector(jqyerySelector)
+
+//TODO implement
+fun jquerySelector(jqyerySelector: String): Selector {
+    var start = `$`
+
+    //TODO don't break on spaces in quotes
+    val matches =
+        Regex(" > | | + | ~ |([#.:\\[])?(?:\\1|[^ #.:/])*").findAll(jqyerySelector).toList().flatMap { it.groupValues }
+            .filter { it.isNotEmpty() }
+            .filter { it == " " || it.length > 1 }
+
+    for (m in matches) {
+
+        when (m[0]) {
+            ' ' -> {
+                when (m) {
+                    " " -> start = start.descendant
+                    " > " -> start = start.child
+                    " + " -> start = start.nextTo
+                    " ~ " -> start = start.siblings
+                }
+            }
+            '#' -> {
+                val ids = m.split(",").map { it.trim('#') }
+                start = start.id(*ids.toTypedArray())
+            }
+            '.' -> {
+                val classes = m.split(",").map { it.trim('.') }
+                start = start.klass(*classes.toTypedArray())
+            }
+            ':' -> {
+                val sel = m.drop(1)
+                when (sel) {
+                    "first-child" -> start = start.firstChild()
+                    "last-child" -> start = start.lastChild()
+                    "only-child" -> start = start.onlyChild()
+                    else -> {
+                        when {
+                            "nth-child" in sel -> {
+                                val n = "nth-child[(]([0-9]*)[)]".toRegex().find(sel)!!.groupValues[1].toInt()
+                                start = start.childAt(n)
+                            }
+                            "nth-last-child" in sel -> {
+                                val n = "nth-last-child[(]([0-9]*)[)]".toRegex().find(sel)!!.groupValues[1].toInt()
+                                start = start.lastChildAt(n)
+
+                            }
+                        }
+                    }
+                }
+            }
+            '[' -> {
+                val str = m.trim('[', ']')
+                val attr = str.split('=')[0]
+                val value = str.split('=')[1]
+                start = start.attributeEquals(attr, value)
+            }
+            else -> {
+                val tags = m.split(",")
+                start = start.tag(*tags.toTypedArray())
+            }
+        }
+    }
+
+    console.log(start)
+
+    return start
+}
