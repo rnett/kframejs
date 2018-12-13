@@ -1,15 +1,13 @@
 package com.rnett.kframejs
 
 import com.rnett.kframejs.dom.*
-import com.rnett.kframejs.structure.*
+import com.rnett.kframejs.structure.page
 import com.rnett.kframejs.structure.styles.Color
 
 /*TODO List:
-    better binding syntax
-    better syntax for jquery selectors (and test them)
-    some way to go back up the tree
-    data bound text
+    inputs
     script via lambda?
+    positioning of bindings doesn't work
 
     site/multipage stuff
 */
@@ -50,36 +48,10 @@ fun main(args: Array<String>) {
                 +"Reset !s (Double Click)"
                 on.dblclick {
                     para.innerHTML = "Hello World"
-
-                    `$`.id("test", "test2").child.tag("div")[page]{ style.backgroundColor = Color.Green }
-                    `$`("#test,#test2 > div")[page]{ style.backgroundColor = Color.Red }
-
                 }
             }
 
-            /*p().bound( {style.backgroundColor}.binding() ) {
-                +parent<StandardDisplayElement>().style.backgroundColor.toString()
-                console.log("Page Update")
-            }*/
-            val color = p()
 
-            binding { style.backgroundColor } watch {
-                color.innerHTML = style.backgroundColor.toString()
-            }
-
-            binding { style.backgroundColor } bindAll {
-                val s = style.backgroundColor.toString()
-                p {
-                    +"1: "
-                    +s
-                }
-                div {
-                    p {
-                        +"2: "
-                        +s
-                    }
-                }
-            }
         }
         head.title {
             +"KFrame JS Test"

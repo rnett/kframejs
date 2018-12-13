@@ -80,9 +80,6 @@ data class Binding(val element: AnyElement, val condition: BindingCondition, val
 
 class BindingException : RuntimeException("Binding already set")
 
-//TODO watches on binding conditions.  so that I can have an update without a reset
-//  something like div{ watch{ cond builder } then {} }
-
 data class Watch(val condition: BindingCondition, val update: () -> Unit) {
     fun doUpdate() {
         if (condition.needsUpdate()) {

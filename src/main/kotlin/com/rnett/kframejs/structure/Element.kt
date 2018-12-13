@@ -6,7 +6,13 @@ import kotlin.browser.document
 import org.w3c.dom.Element as W3Element
 
 @DslMarker
-@Target(AnnotationTarget.CLASS, AnnotationTarget.TYPEALIAS, AnnotationTarget.TYPE, AnnotationTarget.FUNCTION)
+@Target(
+    AnnotationTarget.CLASS,
+    AnnotationTarget.TYPEALIAS,
+    AnnotationTarget.TYPE,
+    AnnotationTarget.FUNCTION,
+    AnnotationTarget.PROPERTY
+)
 annotation class KFrameElementDSL
 
 typealias ElementBuilder<E> = E.() -> Unit
@@ -48,6 +54,8 @@ open class W3ElementWrapper(underlying: W3Element, page: Page) : CanHaveElement(
     override fun internalAdd(element: AnyElement) {}
 }
 
+typealias DynamicString = () -> String
+
 abstract class Element<E : Element<E>>(val tag: String, val rawParent: CanHaveElement) : CanHaveElement(
     rawParent.page, rawParent.underlying.appendChild(document.createElement(tag)) as W3Element
 ) {
@@ -66,9 +74,6 @@ abstract class Element<E : Element<E>>(val tag: String, val rawParent: CanHaveEl
     var id by attributes
     var classes = Classes(this)
     var klass by attributes.by("class")
-    var value by attributes
-    var type by attributes
-    var title by attributes
 
     private val _children = mutableListOf<AnyElement>()
     val children get() = _children.toList()
@@ -116,16 +121,30 @@ abstract class Element<E : Element<E>>(val tag: String, val rawParent: CanHaveEl
         return this as E
     }
 
+    @KFrameElementDSL
     operator fun ElementBuilder<in E>.unaryPlus() = this@Element.invoke(this)
 
-    operator fun String.unaryPlus(): TextElement {
-        val t = underlying.ownerDocument!!.createTextNode(this)
+    @KFrameElementDSL
+    operator fun String.unaryPlus() = addText(this)
+
+    @KFrameElementDSL
+    fun addText(text: String): TextElement {
+        val t = underlying.ownerDocument!!.createTextNode(text)
         underlying.appendChild(t)
         return TextElement(t)
     }
 
-    fun addText(text: String) = text.unaryPlus()
+    @KFrameElementDSL
+    fun text(text: DynamicString): TextElement {
+        val t = addText(text())
+        page.watch(binding { text() }) {
+            t.value = text()
+        }
+        return t
+    }
 
+    @KFrameElementDSL
+    operator fun DynamicString.unaryPlus() = text(this)
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -168,13 +187,17 @@ abstract class Element<E : Element<E>>(val tag: String, val rawParent: CanHaveEl
     }
 
     inline fun String.on(useCapture: Boolean = false, noinline handler: (Event) -> Unit) = on(this, useCapture, handler)
-
+    inline operator fun String.invoke(useCapture: Boolean = false, noinline handler: (Event) -> Unit) =
+        on(this, useCapture, handler)
 
     private var myBinding: Binding? = null
 
     fun update() {
         myBinding?.checkAndUpdate()
+        onUpdate()
     }
+
+    protected open fun onUpdate() {}
 
     @BindingDSL
     fun bindNow(cond: BindingCondition): E {

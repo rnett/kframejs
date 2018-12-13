@@ -45,4 +45,9 @@ class Attributes(val element: AnyElement) : AttrDelegatableMap() {
         return this
     }
 
+
+    var value by this
+    var type by this
+    var title by this
+
 }

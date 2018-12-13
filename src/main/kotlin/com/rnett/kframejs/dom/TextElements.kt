@@ -29,5 +29,5 @@ inline fun IDisplayElement.br(lines: Int) {
         br()
 }
 
-
+@KFrameElementDSL
 val IDisplayElement.br get() = br()
