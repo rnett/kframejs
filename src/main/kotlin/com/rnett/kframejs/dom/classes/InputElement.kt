@@ -2,6 +2,7 @@ package com.rnett.kframejs.dom.classes
 
 import com.rnett.kframejs.structure.CanHaveElement
 import com.rnett.kframejs.structure.DisplayElement
+import org.w3c.dom.HTMLInputElement
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KMutableProperty0
 import kotlin.reflect.KProperty
@@ -42,6 +43,7 @@ abstract class InputElement<T>(
             throw RuntimeException("Input binding is already bound")
 
         this.binding = binding
+        updateFromBinding()
         return this
     }
 
@@ -58,15 +60,25 @@ abstract class InputElement<T>(
         if (valid()) {
             binding?.apply { setter(newValue) }
             _onUpdates.forEach { it(newValue) }
+            console.log("Updated for $newValue")
         } else
             onInvalid()
 
         binding?.apply { setValue(getter()) }
+        console.log("New Bound value is ${binding?.getter?.invoke()}")
     }
 
     var value: T
         get() = getValue()
         set(value) = setValue(value)
+
+
+    init {
+        on.change {
+
+        }
+        updateFromBinding()
+    }
 
 }
 
@@ -78,14 +90,22 @@ class DefaultInputElement<T>(
     val fromRaw: Converter<String, T>,
     val toRaw: Converter<T, String>,
     validator: Validator<T>?,
-    onInvalid: () -> Unit
+    onInvalid: () -> Unit,
+    val rawValidator: (String) -> Boolean
 ) : InputElement<T>(tag, parent, validator, onInvalid) {
-    override fun getValue(): T = fromRaw(attributes.value ?: "")
+
+    var rawValue
+        get() = (underlying as HTMLInputElement).value
+        set(v) {
+            (underlying as HTMLInputElement).value = v
+        }
+
+    override fun getValue(): T = fromRaw(rawValue ?: "")
     override fun setValue(value: T) {
         attributes.value = toRaw(value)
     }
 
-    override fun isRawValid(): Boolean =
+    override fun isRawValid(): Boolean = rawValidator(rawValue ?: "") &&
         try {
             getValue()
             true

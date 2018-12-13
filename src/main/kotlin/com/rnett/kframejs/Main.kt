@@ -5,12 +5,15 @@ import com.rnett.kframejs.structure.page
 import com.rnett.kframejs.structure.styles.Color
 
 /*TODO List:
-    inputs
+    inputs (check numeric)
+    use HtmlElement classes as underlying types
     script via lambda?
     positioning of bindings doesn't work
 
     site/multipage stuff
 */
+
+data class Box<T>(var value: T)
 
 fun main(args: Array<String>) {
 
@@ -50,8 +53,14 @@ fun main(args: Array<String>) {
                     para.innerHTML = "Hello World"
                 }
             }
-            p().bound(style::backgroundColor) {
-                +it.toString()
+            br(2)
+
+            val testText = Box("test")
+
+            stringInput(testText::value)
+
+            p {
+                +{ testText.value }
             }
 
 
