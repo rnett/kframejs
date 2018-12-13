@@ -25,11 +25,11 @@ inline fun page(crossinline builder: Page.() -> Unit): Page {
 
 class Page() {
     private val _elements: MutableSet<AnyElement> = mutableSetOf()
-    private val watches: MutableSet<Watch> = mutableSetOf()
+    private val watches: MutableSet<Watch<*>> = mutableSetOf()
 
     val elements get() = _elements.toSet()
 
-    fun update(sender: AnyElement? = null, event: String? = null) {
+    fun update() {
         _elements.forEach { it.update() }
         watches.forEach { it.doUpdate() }
     }
@@ -40,10 +40,10 @@ class Page() {
     val body get() = Body(this)
 
     internal fun addElement(element: AnyElement) = _elements.add(element)
-    internal fun addWatch(watch: Watch) = watches.add(watch)
+    internal fun addWatch(watch: Watch<*>) = watches.add(watch)
 
     @BindingDSL
-    infix fun BindingCondition.watch(update: () -> Unit) = this@Page.watch(this, update)
+    infix fun <T> BindingCondition<T>.watch(update: (T) -> Unit) = this@Page.watch(this, update)
 
     operator fun Selector.invoke() = this@Page[this]
 }

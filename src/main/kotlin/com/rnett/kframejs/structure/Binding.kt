@@ -1,26 +1,31 @@
 package com.rnett.kframejs.structure
 
+import kotlin.reflect.KProperty0
+
 @DslMarker
 @Target(AnnotationTarget.CLASS, AnnotationTarget.TYPEALIAS, AnnotationTarget.TYPE, AnnotationTarget.FUNCTION)
 annotation class BindingDSL
 
-typealias AnyBinding = () -> Any?
+typealias AnyBinding<T> = () -> T
 typealias BoolBinding = () -> Boolean
 
-sealed class BindingCondition {
+sealed class BindingCondition<T> {
     abstract fun needsUpdate(): Boolean
     abstract fun update()
+    abstract fun value(): T
 }
 
-data class FunctionBindingCondition(val func: AnyBinding) : BindingCondition() {
+data class FunctionBindingCondition<T>(val func: AnyBinding<T>) : BindingCondition<T>() {
 
-    private var lastValue: Any? = func()
+    private var lastValue: Any? = value()
 
-    override fun needsUpdate(): Boolean = func() != lastValue
+    override fun needsUpdate(): Boolean = value() != lastValue
 
     override fun update() {
-        lastValue = func()
+        lastValue = value()
     }
+
+    override fun value() = func()
 
     class Builder {
 
@@ -35,6 +40,19 @@ data class FunctionBindingCondition(val func: AnyBinding) : BindingCondition() {
     }
 }
 
+data class PropertyBindingCondition<T>(val prop: KProperty0<T>) : BindingCondition<T>() {
+
+    private var lastValue: Any? = value()
+
+    override fun needsUpdate(): Boolean = value() != lastValue
+
+    override fun update() {
+        lastValue = value()
+    }
+
+    override fun value() = prop.get()
+}
+
 
 @BindingDSL
 fun <R> binding(builder: FunctionBindingCondition.Builder.() -> R) = FunctionBindingCondition {
@@ -43,68 +61,79 @@ fun <R> binding(builder: FunctionBindingCondition.Builder.() -> R) = FunctionBin
     b.values().plus(result)
 }
 
-data class BooleanBindingCondition(val func: BoolBinding) : BindingCondition() {
-    override fun needsUpdate() = func()
+data class BooleanBindingCondition(val func: BoolBinding) : BindingCondition<Boolean>() {
+    override fun needsUpdate() = value()
 
     override fun update() {}
+
+    override fun value() = func()
 }
 
-sealed class BindingValue {
-    abstract fun set(element: AnyElement)
+sealed class BindingValue<T> {
+    abstract fun set(element: AnyElement, value: T)
 }
 
-data class StateBindingValue(val innerHTML: String, val attributes: Map<String, String>) : BindingValue() {
-    override fun set(element: AnyElement) {
+data class StateBindingValue<T>(val innerHTML: String, val attributes: Map<String, String>) : BindingValue<T>() {
+    override fun set(element: AnyElement, value: T) {
         element.attributes.clear()
         element.attributes.putAll(attributes)
         element.innerHTML = innerHTML
     }
 }
 
-data class BuildersBindingValue(val builders: List<AnyElementBuilder>) : BindingValue() {
-    override fun set(element: AnyElement) {
+data class BuildersBindingValue<T>(val builders: List<BindingElementBuilder<*, T>>) : BindingValue<T>() {
+    override fun set(element: AnyElement, value: T) {
         element.attributes.clear()
         element.innerHTML = ""
-        builders.forEach { (it as AnyElementBuilder)(element) }
+        builders.forEach { (it as BindingElementBuilder<*, T>)(element, value) }
     }
 }
 
-data class Binding(val element: AnyElement, val condition: BindingCondition, val value: BindingValue) {
+data class Binding<T>(val element: AnyElement, val condition: BindingCondition<T>, val value: BindingValue<T>) {
     fun checkAndUpdate() {
         if (condition.needsUpdate()) {
             condition.update()
-            value.set(element)
+            value.set(element, condition.value())
         }
     }
 }
 
 class BindingException : RuntimeException("Binding already set")
 
-data class Watch(val condition: BindingCondition, val update: () -> Unit) {
+data class Watch<T>(val condition: BindingCondition<T>, val update: (T) -> Unit) {
     fun doUpdate() {
         if (condition.needsUpdate()) {
             condition.update()
-            update()
+            update(condition.value())
         }
     }
 }
 
-fun AnyBinding.binding() = FunctionBindingCondition(this)
+fun <T> AnyBinding<T>.binding() = FunctionBindingCondition(this)
 fun BoolBinding.valueBinding() = FunctionBindingCondition(this)
 fun BoolBinding.binding() = BooleanBindingCondition(this)
+fun <T> KProperty0<T>.binding() = PropertyBindingCondition(this)
 
 /**
  * WARNING: Do not add elements inside a watch.  They will be updated every time the value changes
  */
 @BindingDSL
-fun Page.watch(cond: BindingCondition, update: () -> Unit) {
+fun <T> Page.watch(cond: BindingCondition<T>, update: (T) -> Unit) {
     addWatch(Watch(cond, update))
+}
+
+/**
+ * WARNING: Do not add elements inside a watch.  They will be updated every time the value changes
+ */
+@BindingDSL
+fun <T> Page.watch(cond: KProperty0<T>, update: (T) -> Unit) {
+    addWatch(Watch(cond.binding(), update))
 }
 
 //TODO want something like binding { style.backgroundColor } bindAll {} syntax for single elements
 
 @BindingDSL
-fun CanHaveElement.bindAll(binding: BindingCondition, builder: () -> Unit) {
+fun <T> CanHaveElement.bindAll(binding: BindingCondition<T>, builder: (T) -> Unit) {
     val added = mutableSetOf<AnyElement>()
     page.watch(binding) {
         added.forEach { it.remove() }
@@ -112,7 +141,21 @@ fun CanHaveElement.bindAll(binding: BindingCondition, builder: () -> Unit) {
         val listenerID = subscribeOnAdd {
             added.add(it)
         }
-        builder()
+        builder(it)
+        removeAddSubscriber(listenerID)
+    }
+}
+
+@BindingDSL
+fun <T> CanHaveElement.bindAll(binding: KProperty0<T>, builder: (T) -> Unit) {
+    val added = mutableSetOf<AnyElement>()
+    page.watch(binding) {
+        added.forEach { it.remove() }
+        added.clear()
+        val listenerID = subscribeOnAdd {
+            added.add(it)
+        }
+        builder(it)
         removeAddSubscriber(listenerID)
     }
 }

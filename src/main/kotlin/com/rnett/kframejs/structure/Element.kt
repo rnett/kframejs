@@ -3,6 +3,7 @@ package com.rnett.kframejs.structure
 import org.w3c.dom.Text
 import org.w3c.dom.events.Event
 import kotlin.browser.document
+import kotlin.reflect.KProperty0
 import org.w3c.dom.Element as W3Element
 
 @DslMarker
@@ -16,6 +17,8 @@ import org.w3c.dom.Element as W3Element
 annotation class KFrameElementDSL
 
 typealias ElementBuilder<E> = E.() -> Unit
+
+typealias BindingElementBuilder<E, B> = E.(B) -> Unit
 
 typealias AnyElementBuilder = ElementBuilder<*>
 typealias AnyElement = Element<*>
@@ -47,7 +50,7 @@ abstract class CanHaveElement(val page: Page, val underlying: W3Element) : ICanH
     }
 
     @BindingDSL
-    infix fun BindingCondition.bindAll(builder: () -> Unit) = this@CanHaveElement.bindAll(this, builder)
+    infix fun <T> BindingCondition<T>.bindAll(builder: (T) -> Unit) = this@CanHaveElement.bindAll(this, builder)
 }
 
 open class W3ElementWrapper(underlying: W3Element, page: Page) : CanHaveElement(page, underlying) {
@@ -179,7 +182,7 @@ abstract class Element<E : Element<E>>(val tag: String, val rawParent: CanHaveEl
                 { handler(it as H) }
             } else {
                 currentListeners.add(event);
-                { handler(it as H); page.update(this, event) }
+                { handler(it as H); page.update() }
             }
 
         underlying.addEventListener(event, actualHandler, useCapture)
@@ -190,7 +193,7 @@ abstract class Element<E : Element<E>>(val tag: String, val rawParent: CanHaveEl
     inline operator fun String.invoke(useCapture: Boolean = false, noinline handler: (Event) -> Unit) =
         on(this, useCapture, handler)
 
-    private var myBinding: Binding? = null
+    private var myBinding: Binding<*>? = null
 
     fun update() {
         myBinding?.checkAndUpdate()
@@ -200,7 +203,7 @@ abstract class Element<E : Element<E>>(val tag: String, val rawParent: CanHaveEl
     protected open fun onUpdate() {}
 
     @BindingDSL
-    fun bindNow(cond: BindingCondition): E {
+    fun <T> bindNow(cond: BindingCondition<T>): E {
         if (myBinding != null)
             throw BindingException()
         else
@@ -216,7 +219,10 @@ abstract class Element<E : Element<E>>(val tag: String, val rawParent: CanHaveEl
     fun bindNow(cond: () -> Boolean) = bindNow(BooleanBindingCondition(cond))
 
     @BindingDSL
-    fun bound(cond: BindingCondition, builders: List<ElementBuilder<in E>>): E {
+    fun <T> bindNow(cond: KProperty0<T>) = bindNow(PropertyBindingCondition(cond))
+
+    @BindingDSL
+    fun <T> bound(cond: BindingCondition<T>, builders: List<BindingElementBuilder<E, T>>): E {
         if (myBinding != null)
             throw BindingException()
         else
@@ -226,10 +232,17 @@ abstract class Element<E : Element<E>>(val tag: String, val rawParent: CanHaveEl
     }
 
     @BindingDSL
-    fun bound(cond: BindingCondition, builder: ElementBuilder<in E>) = bound(cond, listOf(builder))
+    fun <T> bound(cond: BindingCondition<T>, builder: BindingElementBuilder<E, T>) = bound(cond, listOf(builder))
 
     @BindingDSL
-    operator fun invoke(cond: BindingCondition, builder: ElementBuilder<in E>) = bound(cond, builder)
+    operator fun <T> invoke(cond: BindingCondition<T>, builder: BindingElementBuilder<E, T>) = bound(cond, builder)
+
+    //TODO update the rest of the binding forms to work like this
+    @BindingDSL
+    fun <T> bound(cond: KProperty0<T>, builder: BindingElementBuilder<E, T>) = bound(cond.binding(), listOf(builder))
+
+    @BindingDSL
+    operator fun <T> invoke(cond: KProperty0<T>, builder: BindingElementBuilder<E, T>) = bound(cond, builder)
 }
 
 abstract class DisplayElement<E : DisplayElement<E>>(tag: String, parent: CanHaveElement) : Element<E>(tag, parent),

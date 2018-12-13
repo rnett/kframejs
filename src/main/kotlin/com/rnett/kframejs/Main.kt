@@ -50,6 +50,9 @@ fun main(args: Array<String>) {
                     para.innerHTML = "Hello World"
                 }
             }
+            p().bound(style::backgroundColor) {
+                +it.toString()
+            }
 
 
         }
