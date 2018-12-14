@@ -151,7 +151,69 @@ inline fun <T> T.intInput(
 ) where T : AnyDisplayElement, T : CanHaveElement<*> =
     intInput(InputBinding(getter, setter), klass, validator, onInvalid, builder)
 
-//TODO generic input
+
+inline fun <T, R> T.input(
+    noinline fromRaw: (String) -> R,
+    noinline toRaw: (R) -> String = { it.toString() },
+    klass: String = "",
+    noinline validator: Validator<R>? = null,
+    noinline onInvalid: () -> Unit = {},
+    noinline rawValidator: Validator<String> = { true },
+    crossinline builder: ElementBuilder<DefaultInputElement<R>> = {}
+) where T : AnyDisplayElement, T : CanHaveElement<*> =
+    DefaultInputElement(
+        "input",
+        this,
+        fromRaw,
+        toRaw,
+        validator,
+        onInvalid,
+        rawValidator
+    ).invoke {
+        this.klass = klass
+        builder()
+    }
+
+inline fun <T, R> T.input(
+    prop: KMutableProperty0<R>,
+    noinline fromRaw: (String) -> R,
+    noinline toRaw: (R) -> String = { it.toString() },
+    klass: String = "",
+    noinline validator: Validator<R>? = null,
+    noinline onInvalid: () -> Unit = {},
+    noinline rawValidator: Validator<String> = { true },
+    crossinline builder: ElementBuilder<DefaultInputElement<R>> = {}
+) where T : AnyDisplayElement, T : CanHaveElement<*> =
+    input(fromRaw, toRaw, klass, validator, onInvalid, rawValidator, builder).invoke {
+        bindTo(prop)
+    }
+
+inline fun <T, R> T.input(
+    binding: InputBinding<R>,
+    noinline fromRaw: (String) -> R,
+    noinline toRaw: (R) -> String = { it.toString() },
+    klass: String = "",
+    noinline validator: Validator<R>? = null,
+    noinline onInvalid: () -> Unit = {},
+    noinline rawValidator: Validator<String> = { true },
+    crossinline builder: ElementBuilder<DefaultInputElement<R>> = {}
+) where T : AnyDisplayElement, T : CanHaveElement<*> =
+    input(fromRaw, toRaw, klass, validator, onInvalid, rawValidator, builder).invoke {
+        bindTo(binding)
+    }
+/* causes conflicts for some reason
+inline fun <T, R> T.input(
+    noinline getter: () -> R, noinline setter: (R) -> Unit,
+    noinline fromRaw: (String) -> R,
+    noinline toRaw: (R) -> String = {it.toString()},
+    klass: String = "",
+    noinline validator: Validator<R>? = null,
+    noinline onInvalid: () -> Unit = {},
+    noinline rawValidator: Validator<String> = {true},
+    crossinline builder: ElementBuilder<DefaultInputElement<R>> = {}
+) where T : AnyDisplayElement, T : CanHaveElement<*> =
+    input(InputBinding(getter, setter), fromRaw, toRaw, klass, validator, onInvalid, rawValidator, builder)
+*/
 
 //TODO dropdowns, combo boxes?, all the rest (ugh)
 

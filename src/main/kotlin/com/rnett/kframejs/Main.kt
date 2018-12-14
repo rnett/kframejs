@@ -15,6 +15,10 @@ import com.rnett.kframejs.structure.styles.Color
 */
 
 data class Box<T>(var value: T)
+data class Tester(val text: String) {
+    val myText = text + "!!!"
+    override fun toString(): String = myText
+}
 
 fun main(args: Array<String>) {
 
@@ -64,6 +68,13 @@ fun main(args: Array<String>) {
                 +{ testText.value + " - color: " + parent.style.backgroundColor }
             }
 
+            p("Generic Input test")
+
+            val test2 = Box(Tester("Hello"))
+
+            input(test2::value, { Tester(it) }, { it.text })
+
+            p { +{ test2.value.toString() } }
 
         }
         head.title {
