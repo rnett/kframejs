@@ -6,9 +6,12 @@ import com.rnett.kframejs.structure.styles.Color
 
 /*TODO List:
     inputs (check numeric)
-    use HtmlElement classes as underlying types
     script via lambda?
+    Views
+
     positioning of bindings doesn't work
+
+    transaction{ } style multiple style/attribute editing
 
     persisted data
     site/multipage stuff
