@@ -2,6 +2,7 @@ package com.rnett.kframejs.dom.classes
 
 import com.rnett.kframejs.structure.CanHaveElement
 import com.rnett.kframejs.structure.DisplayElement
+import com.rnett.kframejs.structure.W3Element
 import org.w3c.dom.HTMLInputElement
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KMutableProperty0
@@ -12,12 +13,12 @@ typealias Validator<T> = (T) -> Boolean
 
 data class InputBinding<T>(val getter: () -> T, val setter: (T) -> Unit)
 
-abstract class InputElement<T>(
+abstract class InputElement<E : InputElement<E, T, U>, T, U : W3Element>(
     tag: String,
-    parent: CanHaveElement,
+    parent: CanHaveElement<*>,
     val validator: Validator<T>?,
     val onInvalid: () -> Unit = {}
-) : DisplayElement<InputElement<T>>(tag, parent), ReadWriteProperty<Any, T> {
+) : DisplayElement<E, U>(tag, parent), ReadWriteProperty<Any, T> {
     abstract fun getValue(): T
     abstract fun setValue(value: T)
     abstract fun isRawValid(): Boolean
@@ -28,9 +29,9 @@ abstract class InputElement<T>(
 
     private val _onUpdates = mutableListOf<UpdateHandler<T>>()
 
-    fun onUpdate(handler: UpdateHandler<T>): InputElement<T> {
+    fun onUpdate(handler: UpdateHandler<T>): E {
         _onUpdates.add(handler)
-        return this
+        return this as E
     }
 
     private var binding: InputBinding<T>? = null
@@ -38,13 +39,13 @@ abstract class InputElement<T>(
     /**
      * Binding will get updated before onUpdates, and then the value will be updated to binding afterwards
      */
-    infix fun bindTo(binding: InputBinding<T>): InputElement<T> {
+    infix fun bindTo(binding: InputBinding<T>): E {
         if (this.binding != null)
             throw RuntimeException("Input binding is already bound")
 
         this.binding = binding
         updateFromBinding()
-        return this
+        return this as E
     }
 
     infix fun bindTo(property: KMutableProperty0<T>) = bindTo(InputBinding({ property.get() }, { property.set(it) }))
@@ -86,26 +87,20 @@ typealias Converter<T, R> = (T) -> R
 
 class DefaultInputElement<T>(
     tag: String,
-    parent: CanHaveElement,
+    parent: CanHaveElement<*>,
     val fromRaw: Converter<String, T>,
     val toRaw: Converter<T, String>,
     validator: Validator<T>?,
     onInvalid: () -> Unit,
     val rawValidator: (String) -> Boolean
-) : InputElement<T>(tag, parent, validator, onInvalid) {
+) : InputElement<DefaultInputElement<T>, T, HTMLInputElement>(tag, parent, validator, onInvalid) {
 
-    var rawValue
-        get() = (underlying as HTMLInputElement).value
-        set(v) {
-            (underlying as HTMLInputElement).value = v
-        }
-
-    override fun getValue(): T = fromRaw(rawValue ?: "")
+    override fun getValue(): T = fromRaw(underlying.value ?: "")
     override fun setValue(value: T) {
         attributes.value = toRaw(value)
     }
 
-    override fun isRawValid(): Boolean = rawValidator(rawValue ?: "") &&
+    override fun isRawValid(): Boolean = rawValidator(underlying.value ?: "") &&
         try {
             getValue()
             true

@@ -1,6 +1,7 @@
 package com.rnett.kframejs.structure
 
-import org.w3c.dom.Element as W3Element
+interface IDisplayElement<U : W3Element> : ICanHaveElement<U>
+interface IMetaElement<U : W3Element> : ICanHaveElement<U>
 
-interface IDisplayElement : ICanHaveElement
-interface IMetaElement : ICanHaveElement
+typealias AnyDisplayElement = IDisplayElement<*>
+typealias AnyMetaElement = IMetaElement<*>

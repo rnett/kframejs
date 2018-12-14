@@ -21,11 +21,13 @@ typealias ElementBuilder<E> = E.() -> Unit
 typealias BindingElementBuilder<E, B> = E.(B) -> Unit
 
 typealias AnyElementBuilder = ElementBuilder<*>
-typealias AnyElement = Element<*>
+typealias AnyElement = Element<*, *>
 
-interface ICanHaveElement
+typealias W3Element = W3Element
 
-abstract class CanHaveElement(val page: Page, val underlying: W3Element) : ICanHaveElement {
+interface ICanHaveElement<U>
+
+abstract class CanHaveElement<U : W3Element>(val page: Page, val underlying: U) : ICanHaveElement<U> {
     protected abstract fun internalAdd(element: AnyElement)
 
     private var subs = 0
@@ -53,14 +55,15 @@ abstract class CanHaveElement(val page: Page, val underlying: W3Element) : ICanH
     infix fun <T> BindingCondition<T>.bindAll(builder: (T) -> Unit) = this@CanHaveElement.bindAll(this, builder)
 }
 
-open class W3ElementWrapper(underlying: W3Element, page: Page) : CanHaveElement(page, underlying) {
+open class W3ElementWrapper<U : W3Element>(underlying: U, page: Page) : CanHaveElement<U>(page, underlying) {
     override fun internalAdd(element: AnyElement) {}
 }
 
 typealias DynamicString = () -> String
 
-abstract class Element<E : Element<E>>(val tag: String, val rawParent: CanHaveElement) : CanHaveElement(
-    rawParent.page, rawParent.underlying.appendChild(document.createElement(tag)) as W3Element
+abstract class Element<E : Element<E, U>, U : W3Element>(val tag: String, val rawParent: CanHaveElement<*>) :
+    CanHaveElement<U>(
+        rawParent.page, rawParent.underlying.appendChild(document.createElement(tag)) as U
 ) {
 
     init {
@@ -81,7 +84,7 @@ abstract class Element<E : Element<E>>(val tag: String, val rawParent: CanHaveEl
     private val _children = mutableListOf<AnyElement>()
     val children get() = _children.toList()
 
-    inline fun <reified P : Element<P>> parent(): P {
+    inline fun <reified P : Element<P, Pu>, Pu : W3Element> parent(): P {
         if (rawParent is P)
             return rawParent
         else throw ClassCastException("Node is at the top of the tree of KFrame nodes.  Use parent property instead")
@@ -153,7 +156,7 @@ abstract class Element<E : Element<E>>(val tag: String, val rawParent: CanHaveEl
         if (this === other) return true
         if (other is W3Element) return underlying == other
 
-        if (other !is Element<*>) return false
+        if (other !is Element<*, *>) return false
 
         if (underlying != other.underlying) return false
 
@@ -245,21 +248,26 @@ abstract class Element<E : Element<E>>(val tag: String, val rawParent: CanHaveEl
     operator fun <T> invoke(cond: KProperty0<T>, builder: BindingElementBuilder<E, T>) = bound(cond, builder)
 }
 
-abstract class DisplayElement<E : DisplayElement<E>>(tag: String, parent: CanHaveElement) : Element<E>(tag, parent),
-    IDisplayElement
+abstract class DisplayElement<E : DisplayElement<E, U>, U : W3Element>(tag: String, parent: CanHaveElement<*>) :
+    Element<E, U>(tag, parent),
+    IDisplayElement<U>
 
-abstract class MetaElement<E : MetaElement<E>>(tag: String, parent: CanHaveElement) : Element<E>(tag, parent),
-    IMetaElement
+abstract class MetaElement<E : MetaElement<E, U>, U : W3Element>(tag: String, parent: CanHaveElement<*>) :
+    Element<E, U>(tag, parent),
+    IMetaElement<U>
 
-class StandardDisplayElement(tag: String, parent: CanHaveElement) : DisplayElement<StandardDisplayElement>(tag, parent)
-typealias StandardDisplayElementBuilder = ElementBuilder<StandardDisplayElement>
+class StandardDisplayElement<U : W3Element>(tag: String, parent: CanHaveElement<*>) :
+    DisplayElement<StandardDisplayElement<U>, U>(tag, parent)
+typealias StandardDisplayElementBuilder<U> = ElementBuilder<StandardDisplayElement<U>>
 
-fun ICanHaveElement.displayElement(tag: String) = StandardDisplayElement(tag, this as CanHaveElement)
+fun <U : W3Element> ICanHaveElement<*>.displayElement(tag: String) =
+    StandardDisplayElement<U>(tag, this as CanHaveElement<*>)
 
-class StandardMetaElement(tag: String, parent: CanHaveElement) : MetaElement<StandardMetaElement>(tag, parent)
-typealias StandardMetaElementBuilder = ElementBuilder<StandardMetaElement>
+class StandardMetaElement<U : W3Element>(tag: String, parent: CanHaveElement<*>) :
+    MetaElement<StandardMetaElement<U>, U>(tag, parent)
+typealias StandardMetaElementBuilder<U> = ElementBuilder<StandardMetaElement<U>>
 
-fun ICanHaveElement.metaElement(tag: String) = StandardMetaElement(tag, this as CanHaveElement)
+fun <U : W3Element> ICanHaveElement<*>.metaElement(tag: String) = StandardMetaElement<U>(tag, this as CanHaveElement<*>)
 
 //TODO function updating text elements
 

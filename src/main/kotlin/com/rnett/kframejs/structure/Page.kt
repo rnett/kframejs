@@ -1,5 +1,7 @@
 package com.rnett.kframejs.structure
 
+import org.w3c.dom.HTMLBodyElement
+import org.w3c.dom.HTMLHeadElement
 import org.w3c.dom.get
 import kotlin.browser.document
 import kotlin.browser.window
@@ -48,12 +50,14 @@ class Page() {
     operator fun Selector.invoke() = this@Page[this]
 }
 
-class Body internal constructor(page: Page) : W3ElementWrapper(document.getElementsByTagName("body")[0]!!, page),
-    IDisplayElement {
+class Body internal constructor(page: Page) :
+    W3ElementWrapper<HTMLBodyElement>(document.getElementsByTagName("body")[0]!! as HTMLBodyElement, page),
+    IDisplayElement<HTMLBodyElement> {
     override fun internalAdd(element: AnyElement) {}
 }
 
-class Head internal constructor(page: Page) : W3ElementWrapper(document.getElementsByTagName("head")[0]!!, page),
-    IMetaElement {
+class Head internal constructor(page: Page) :
+    W3ElementWrapper<HTMLHeadElement>(document.getElementsByTagName("head")[0]!! as HTMLHeadElement, page),
+    IMetaElement<HTMLHeadElement> {
     override fun internalAdd(element: AnyElement) {}
 }

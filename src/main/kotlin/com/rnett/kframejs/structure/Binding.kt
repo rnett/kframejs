@@ -133,7 +133,7 @@ fun <T> Page.watch(cond: KProperty0<T>, update: (T) -> Unit) {
 //TODO want something like binding { style.backgroundColor } bindAll {} syntax for single elements
 
 @BindingDSL
-fun <T> CanHaveElement.bindAll(binding: BindingCondition<T>, builder: (T) -> Unit) {
+fun <T, U : W3Element> CanHaveElement<U>.bindAll(binding: BindingCondition<T>, builder: (T) -> Unit) {
     val added = mutableSetOf<AnyElement>()
     page.watch(binding) {
         added.forEach { it.remove() }
@@ -147,7 +147,7 @@ fun <T> CanHaveElement.bindAll(binding: BindingCondition<T>, builder: (T) -> Uni
 }
 
 @BindingDSL
-fun <T> CanHaveElement.bindAll(binding: KProperty0<T>, builder: (T) -> Unit) {
+fun <T, U : W3Element> CanHaveElement<U>.bindAll(binding: KProperty0<T>, builder: (T) -> Unit) {
     val added = mutableSetOf<AnyElement>()
     page.watch(binding) {
         added.forEach { it.remove() }

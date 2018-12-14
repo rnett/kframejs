@@ -1,20 +1,21 @@
 package com.rnett.kframejs.dom
 
-import com.rnett.kframejs.structure.IDisplayElement
-import com.rnett.kframejs.structure.KFrameElementDSL
-import com.rnett.kframejs.structure.StandardDisplayElementBuilder
-import com.rnett.kframejs.structure.displayElement
+import com.rnett.kframejs.structure.*
+import org.w3c.dom.HTMLDivElement
+import org.w3c.dom.HTMLSpanElement
 
 @KFrameElementDSL
-inline fun IDisplayElement.div(klass: String = "", crossinline builder: StandardDisplayElementBuilder = {}) =
-    displayElement("div").invoke {
+inline fun <T> T.div(klass: String = "", crossinline builder: StandardDisplayElementBuilder<HTMLDivElement> = {})
+        where T : AnyDisplayElement, T : CanHaveElement<*> =
+    StandardDisplayElement<HTMLDivElement>("div", this).invoke {
         this.klass = klass
         builder()
     }
 
 @KFrameElementDSL
-inline fun IDisplayElement.span(klass: String = "", crossinline builder: StandardDisplayElementBuilder = {}) =
-    displayElement("span").invoke {
+inline fun <T> T.span(klass: String = "", crossinline builder: StandardDisplayElementBuilder<HTMLSpanElement> = {})
+        where T : AnyDisplayElement, T : CanHaveElement<*> =
+    StandardDisplayElement<HTMLSpanElement>("span", this).invoke {
         this.klass = klass
         builder()
     }

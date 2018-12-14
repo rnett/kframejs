@@ -1,21 +1,21 @@
 package com.rnett.kframejs.dom
 
-import com.rnett.kframejs.structure.IMetaElement
-import com.rnett.kframejs.structure.KFrameElementDSL
-import com.rnett.kframejs.structure.StandardMetaElementBuilder
-import com.rnett.kframejs.structure.metaElement
+import com.rnett.kframejs.structure.*
+import org.w3c.dom.HTMLScriptElement
+import org.w3c.dom.HTMLTitleElement
 
 @KFrameElementDSL
-inline fun IMetaElement.title(klass: String = "", crossinline builder: StandardMetaElementBuilder = {}) =
-    metaElement("title").invoke {
+inline fun <T> T.title(klass: String = "", crossinline builder: StandardMetaElementBuilder<HTMLTitleElement> = {})
+        where T : AnyMetaElement, T : CanHaveElement<*> =
+    StandardMetaElement<HTMLTitleElement>("title", this).invoke {
         this.klass = klass
         builder()
     }
 
 @KFrameElementDSL
-inline fun IMetaElement.script(klass: String = "", crossinline builder: StandardMetaElementBuilder = {}) =
-    metaElement("script").invoke {
+inline fun <T> T.script(klass: String = "", crossinline builder: StandardMetaElementBuilder<HTMLScriptElement> = {})
+        where T : AnyMetaElement, T : CanHaveElement<*> =
+    StandardMetaElement<HTMLScriptElement>("script", this).invoke {
         this.klass = klass
         builder()
     }
-

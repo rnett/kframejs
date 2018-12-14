@@ -10,6 +10,7 @@ import com.rnett.kframejs.structure.styles.Color
     script via lambda?
     positioning of bindings doesn't work
 
+    persisted data
     site/multipage stuff
 */
 
@@ -60,7 +61,7 @@ fun main(args: Array<String>) {
             stringInput(testText::value)
 
             p {
-                +{ testText.value }
+                +{ testText.value + " - color: " + parent.style.backgroundColor }
             }
 
 

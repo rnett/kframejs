@@ -17,7 +17,7 @@ data class EventHandler(
 
 fun AnyElement.removeEventHandler(eh: EventHandler) = if (eh.element == this) eh.remove() else Unit
 
-class Events<E : Element<E>>(val element: E) {
+class Events<E : Element<E, U>, U : W3Element>(val element: E) {
 
     inline fun <H : Event> on(event: String, useCapture: Boolean = false, noinline handler: (H) -> Unit) =
         element.on(event, useCapture, handler)

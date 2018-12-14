@@ -1,17 +1,17 @@
 package com.rnett.kframejs.dom
 
-import com.rnett.kframejs.structure.IDisplayElement
-import com.rnett.kframejs.structure.KFrameElementDSL
-import com.rnett.kframejs.structure.StandardDisplayElementBuilder
-import com.rnett.kframejs.structure.displayElement
+import com.rnett.kframejs.structure.*
+import org.w3c.dom.HTMLBRElement
+import org.w3c.dom.HTMLParagraphElement
 
 @KFrameElementDSL
-inline fun IDisplayElement.p(
+inline fun <T> T.p(
     text: String = "",
     klass: String = "",
-    crossinline builder: StandardDisplayElementBuilder = {}
-) =
-    displayElement("p").invoke {
+    crossinline builder: StandardDisplayElementBuilder<HTMLParagraphElement> = {}
+)
+        where T : AnyDisplayElement, T : CanHaveElement<*> =
+    StandardDisplayElement<HTMLParagraphElement>("p", this).invoke {
         this.klass = klass
         if (text != "") {
             +text
@@ -20,14 +20,15 @@ inline fun IDisplayElement.p(
     }
 
 @KFrameElementDSL
-inline fun IDisplayElement.br() =
-    displayElement("br")
+inline fun <T> T.br() where T : AnyDisplayElement, T : CanHaveElement<*> =
+    StandardDisplayElement<HTMLBRElement>("br", this)
 
 @KFrameElementDSL
-inline fun IDisplayElement.br(lines: Int) {
+inline fun <T> T.br(lines: Int) where T : AnyDisplayElement, T : CanHaveElement<*> {
     for (i in 0..lines)
         br()
 }
 
 @KFrameElementDSL
-val IDisplayElement.br get() = br()
+val <T> T.br where T : AnyDisplayElement, T : CanHaveElement<*>
+    get() = br()
