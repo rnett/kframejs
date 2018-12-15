@@ -20,7 +20,7 @@ sealed class Storage(val underlying: JsStorage, val storageName: String) {
 
     private val serializers: MutableMap<String, KSerializer<*>> = mutableMapOf()
 
-    fun setKeySeralizerOnly(key: String, serializer: KSerializer<*>) {
+    fun setKeySerializerOnly(key: String, serializer: KSerializer<*>) {
         serializers[key] = serializer
     }
 
@@ -38,7 +38,7 @@ sealed class Storage(val underlying: JsStorage, val storageName: String) {
     operator fun contains(key: String) = underlying.getItem(key) != null
 
     inline fun <reified R : Any> setSerializer(key: String, serializer: KSerializer<R>) {
-        setKeySeralizerOnly(key, serializer)
+        setKeySerializerOnly(key, serializer)
         val c = R::class
         if (!hasDefaultSerializer(c))
             setDefaultSerializer(serializer)
@@ -54,7 +54,7 @@ sealed class Storage(val underlying: JsStorage, val storageName: String) {
     inline fun <reified R : Any> getSerializer(key: String) = getSerializer(key, R::class)
 
     operator fun <R : Any> get(key: String, serializer: KSerializer<R>): R {
-        setKeySeralizerOnly(key, serializer)
+        setKeySerializerOnly(key, serializer)
         return underlying.getItem(key)?.let {
             CBOR.plain.loads(
                 serializer,
@@ -82,7 +82,7 @@ sealed class Storage(val underlying: JsStorage, val storageName: String) {
     }
 
     operator fun <R : Any> set(key: String, value: R, serializer: KSerializer<R>) {
-        setKeySeralizerOnly(key, serializer)
+        setKeySerializerOnly(key, serializer)
         underlying.setItem(
             key, CBOR.plain.dumps(
                 serializer,
