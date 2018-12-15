@@ -3,8 +3,12 @@ package com.rnett.kframejs
 import com.rnett.kframejs.dom.*
 import com.rnett.kframejs.structure.DisplayElement
 import com.rnett.kframejs.structure.DisplayView
+import com.rnett.kframejs.structure.LocalStorage
 import com.rnett.kframejs.structure.page
 import com.rnett.kframejs.structure.styles.Color
+import kotlinx.serialization.ImplicitReflectionSerializer
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.list
 
 /*TODO List:
     inputs (check numeric)
@@ -36,7 +40,26 @@ data class Tester(val text: String) : DisplayView {
     val myText = "$text!!!"
 }
 
+@Serializable
+data class Test2(val value: Int) {
+    fun valueFunc() = value
+}
+
+fun listTest(vararg v: Int) = v.map { Test2(it) }
+
+@ImplicitReflectionSerializer
 fun main(args: Array<String>) {
+
+    var testStore: List<Test2> by LocalStorage.by("testStore", Test2.serializer().list)
+    testStore = listTest(1, 2, 3)
+
+    console.log("Test from Delegate: ", testStore)
+    val t = LocalStorage.get<List<Test2>>("testStore")
+    console.log("Test from Store", t)
+
+    t.forEach { console.log(it.valueFunc()) }
+
+
 
     page {
         var outer = body.div {

@@ -1,6 +1,6 @@
 buildscript{
     ext.web_dir = 'web'
-    ext.kotlin_version = '1.3.10'
+    ext.kotlin_version = '1.3.11'
     ext.frontend_version = '0.0.37'
     ext.kotlinx_html_version = '0.6.10'
 
@@ -10,11 +10,13 @@ buildscript{
         maven {
             url "https://dl.bintray.com/kotlin/kotlin-eap"
         }
+        maven { url "https://kotlin.bintray.com/kotlinx" }
     }
 
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath "org.jetbrains.kotlin:kotlin-frontend-plugin:$frontend_version"
+        classpath "org.jetbrains.kotlin:kotlin-serialization:$kotlin_version"
     }
 }
 // apply plugin
@@ -28,16 +30,18 @@ apply plugin: 'kotlin-dce-js'
 runDceKotlinJs.keep "kframejs_main.com.rnett.kframejs.structure"
 runDceKotlinJs.keep "kframejs_main.com.rnett.kframejs.structure.displayElement_9kf5g0\$"
 */
+apply plugin: 'kotlinx-serialization'
 
 repositories {
     mavenCentral()
     jcenter()
+    maven { url "https://kotlin.bintray.com/kotlinx" }
 }
 
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-js:1.3.11"
 
-    //compile "org.jetbrains.kotlinx:kotlinx-html-js:${kotlinx_html_version}"
+    compile "org.jetbrains.kotlinx:kotlinx-serialization-runtime-js:0.9.1"
 }
 
 compileKotlin2Js {

@@ -20,6 +20,23 @@ inline fun <T> T.div(
     }
 
 @KFrameElementDSL
+inline fun <T> T.divs(
+    vararg classes: String,
+    crossinline builder: StandardDisplayElementBuilder<HTMLDivElement> = {}
+): StandardDisplayElement<HTMLDivElement> where T : AnyDisplayElement, T : CanHaveElement<*> {
+
+    if (classes.isEmpty())
+        return div()
+
+    var outer: CanHaveElement<*> = this
+    for (klass in classes) {
+        outer = div(klass)
+    }
+    @Suppress("UNCHECKED_CAST")
+    return (outer as? StandardDisplayElement<HTMLDivElement>)?.invoke { builder() }!!
+}
+
+@KFrameElementDSL
 inline fun <T> T.span(
     klass: String = "",
     id: String = "",
@@ -33,3 +50,21 @@ inline fun <T> T.span(
             this.id = id
         builder()
     }
+
+
+@KFrameElementDSL
+inline fun <T> T.spans(
+    vararg classes: String,
+    crossinline builder: StandardDisplayElementBuilder<HTMLSpanElement> = {}
+): StandardDisplayElement<HTMLSpanElement> where T : AnyDisplayElement, T : CanHaveElement<*> {
+
+    if (classes.isEmpty())
+        return span()
+
+    var outer: CanHaveElement<*> = this
+    for (klass in classes) {
+        outer = span(klass)
+    }
+    @Suppress("UNCHECKED_CAST")
+    return (outer as? StandardDisplayElement<HTMLSpanElement>)?.invoke { builder() }!!
+}
