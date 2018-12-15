@@ -9,9 +9,6 @@ import com.rnett.kframejs.structure.styles.Color
 /*TODO List:
     inputs (check numeric)
     script via lambda?
-    Views
-
-    events via event handler methods?
 
     positioning of bindings doesn't work
 

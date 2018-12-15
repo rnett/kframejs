@@ -5,10 +5,9 @@ import org.w3c.dom.HTMLScriptElement
 import org.w3c.dom.HTMLTitleElement
 
 @KFrameElementDSL
-inline fun <T> T.title(klass: String = "", crossinline builder: StandardMetaElementBuilder<HTMLTitleElement> = {})
+inline fun <T> T.title(crossinline builder: StandardMetaElementBuilder<HTMLTitleElement> = {})
         where T : AnyMetaElement, T : CanHaveElement<*> =
     StandardMetaElement<HTMLTitleElement>("title", this).invoke {
-        this.klass = klass
         builder()
     }
 

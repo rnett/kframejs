@@ -4,9 +4,16 @@ import com.rnett.kframejs.structure.*
 import org.w3c.dom.HTMLButtonElement
 
 @KFrameElementDSL
-inline fun <T> T.button(klass: String = "", crossinline builder: StandardDisplayElementBuilder<HTMLButtonElement> = {})
+inline fun <T> T.button(
+    klass: String = "",
+    id: String = "",
+    crossinline builder: StandardDisplayElementBuilder<HTMLButtonElement> = {}
+)
         where T : AnyDisplayElement, T : CanHaveElement<*> =
     StandardDisplayElement<HTMLButtonElement>("button", this).invoke {
-        this.klass = klass
+        if (klass != "")
+            this.klass = klass
+        if (id != "")
+            this.id = id
         builder()
     }
