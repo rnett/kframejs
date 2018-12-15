@@ -61,12 +61,10 @@ abstract class InputElement<E : InputElement<E, T, U>, T, U : W3Element>(
         if (valid()) {
             binding?.apply { setter(newValue) }
             _onUpdates.forEach { it(newValue) }
-            console.log("Updated for $newValue")
         } else
             onInvalid()
 
         binding?.apply { setValue(getter()) }
-        console.log("New Bound value is ${binding?.getter?.invoke()}")
     }
 
     var value: T

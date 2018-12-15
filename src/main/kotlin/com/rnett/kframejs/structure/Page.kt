@@ -42,7 +42,10 @@ class Page() {
     val body get() = Body(this)
 
     internal fun addElement(element: AnyElement) = _elements.add(element)
-    internal fun addWatch(watch: Watch<*>) = watches.add(watch)
+    internal fun addWatch(watch: Watch<*>) {
+        watch.doUpdate(true)
+        watches.add(watch)
+    }
 
     @BindingDSL
     infix fun <T> BindingCondition<T>.watch(update: (T) -> Unit) = this@Page.watch(this, update)

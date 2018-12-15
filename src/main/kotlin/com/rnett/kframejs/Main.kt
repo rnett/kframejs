@@ -1,6 +1,8 @@
 package com.rnett.kframejs
 
 import com.rnett.kframejs.dom.*
+import com.rnett.kframejs.structure.DisplayElement
+import com.rnett.kframejs.structure.DisplayView
 import com.rnett.kframejs.structure.page
 import com.rnett.kframejs.structure.styles.Color
 
@@ -8,6 +10,8 @@ import com.rnett.kframejs.structure.styles.Color
     inputs (check numeric)
     script via lambda?
     Views
+
+    events via event handler methods?
 
     positioning of bindings doesn't work
 
@@ -17,10 +21,22 @@ import com.rnett.kframejs.structure.styles.Color
     site/multipage stuff
 */
 
+/**
+ * Notes:
+ * Bound elements will be re-added as the last element in their parent on refresh
+ * Wrap them in something TODO write helper for div, span wrappers
+ */
+
 data class Box<T>(var value: T)
-data class Tester(val text: String) {
-    val myText = text + "!!!"
-    override fun toString(): String = myText
+
+data class Tester(val text: String) : DisplayView {
+    override fun DisplayElement<*, *>.display() {
+        p {
+            +myText
+        }
+    }
+
+    val myText = "$text!!!"
 }
 
 fun main(args: Array<String>) {
@@ -77,7 +93,16 @@ fun main(args: Array<String>) {
 
             input(test2::value, { Tester(it) }, { it.text })
 
-            p { +{ test2.value.toString() } }
+            +test2::value
+
+            br
+
+            div {
+                p {
+                    +"Known: "
+                    +{ test2.value.myText }
+                }
+            }
 
         }
         head.title {

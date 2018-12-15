@@ -101,8 +101,8 @@ data class Binding<T>(val element: AnyElement, val condition: BindingCondition<T
 class BindingException : RuntimeException("Binding already set")
 
 data class Watch<T>(val condition: BindingCondition<T>, val update: (T) -> Unit) {
-    fun doUpdate() {
-        if (condition.needsUpdate()) {
+    internal fun doUpdate(force: Boolean = true) {
+        if (force || condition.needsUpdate()) {
             condition.update()
             update(condition.value())
         }
