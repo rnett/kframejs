@@ -6,7 +6,12 @@ import kotlinx.serialization.dumps
 import kotlinx.serialization.loads
 import kotlin.browser.localStorage
 import kotlin.browser.sessionStorage
+import kotlin.collections.MutableMap
+import kotlin.collections.contains
+import kotlin.collections.mutableMapOf
+import kotlin.collections.set
 import kotlin.properties.ReadWriteProperty
+import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 import org.w3c.dom.Storage as RawJsStorage
 
@@ -18,69 +23,111 @@ sealed class Storage(val underlying: JsStorage) {
 
     private val serializers: MutableMap<String, KSerializer<*>> = mutableMapOf()
 
-    fun <R> setSerializer(key: String, serializer: KSerializer<R>) {
+    fun setKeySeralizerOnly(key: String, serializer: KSerializer<*>) {
         serializers[key] = serializer
     }
 
-    operator fun <R> set(key: String, serializer: KSerializer<R>) = setSerializer(key, serializer)
-
-    fun <R> getSerializer(key: String) = serializers.get(key) as? KSerializer<R>
-
-    operator fun <R : Any> get(key: String, serializer: KSerializer<R>?): R {
-        if (serializer != null)
-            setSerializer(key, serializer)
-        return this[key]
+    inline fun <reified R : Any> setSerializer(key: String, serializer: KSerializer<R>) {
+        setKeySeralizerOnly(key, serializer)
+        val c = R::class
+        if (!hasDefaultSerializer(c))
+            setDefaultSerializer(serializer)
     }
 
+    inline operator fun <reified R : Any> set(key: String, serializer: KSerializer<R>) = setSerializer(key, serializer)
 
-    operator fun <R : Any> get(key: String): R =
-        underlying.getItem(key)?.let {
+    inline operator fun <reified R : Any> plusAssign(serializer: KSerializer<R>) = setDefaultSerializer(serializer)
+
+    fun <R : Any> getSerializer(key: String, klass: KClass<R>) =
+        serializers[key] as? KSerializer<R> ?: defaultSerializers[klass] as? KSerializer<R>
+
+    inline fun <reified R : Any> getSerializer(key: String) = getSerializer(key, R::class)
+
+    operator fun <R : Any> get(key: String, serializer: KSerializer<R>): R {
+        setKeySeralizerOnly(key, serializer)
+        return underlying.getItem(key)?.let {
             CBOR.plain.loads(
-                getSerializer<R>(key) ?: throw StorageException("No Serializer for $key"),
+                serializer,
                 it
             )
         } ?: throw StorageException("Key $key is not present in storage")
+    }
 
-    fun <R : Any> getOrNull(key: String): R? = try {
+
+    inline operator fun <reified R : Any> get(key: String): R = get(
+        key,
+        getSerializer(key) ?: throw StorageException("No Serializer for $key")
+    )
+
+    inline fun <reified R : Any> getOrNull(key: String): R? = try {
         get(key)
     } catch (se: StorageException) {
         null
     }
 
-    operator fun <R : Any> set(key: String, value: R) {
+    fun <R : Any> getOrNull(key: String, serializer: KSerializer<R>): R? = try {
+        get(key, serializer)
+    } catch (se: StorageException) {
+        null
+    }
+
+    operator fun <R : Any> set(key: String, value: R, serializer: KSerializer<R>) {
+        setKeySeralizerOnly(key, serializer)
         underlying.setItem(
             key, CBOR.plain.dumps(
-                getSerializer(key) ?: throw StorageException("No Serializer for $key"),
+                serializer,
                 value
             )
         )
     }
 
-    operator fun <R : Any> set(key: String, value: R, serializer: KSerializer<R>?) {
-        if (serializer != null)
-            setSerializer(key, serializer)
-        this[key] = value
+    inline operator fun <reified R : Any> set(key: String, value: R) {
+        set(key, value, getSerializer(key) ?: throw StorageException("No Serializer for $key"))
     }
 
     fun remove(key: String) = underlying.removeItem(key)
 
-    operator fun <R : Any> getValue(thisRef: Any?, property: KProperty<*>): R = this[property.name]
-    operator fun <R : Any> setValue(thisRef: Any?, property: KProperty<*>, value: R) = set(property.name, value)
+    inline operator fun <reified R : Any> getValue(thisRef: Any?, property: KProperty<*>): R = this[property.name]
+    inline operator fun <reified R : Any> setValue(thisRef: Any?, property: KProperty<*>, value: R) =
+        set(property.name, value)
 
-    inner class Delegate<T : Any> internal constructor(val serializer: KSerializer<T>?, val name: String? = null) :
-        ReadWriteProperty<Any?, T> {
-        override fun getValue(thisRef: Any?, property: KProperty<*>): T {
-            return get(name ?: property.name, serializer)
+    inner class Delegate(val name: String? = null) {
+        inline operator fun <reified R : Any> getValue(thisRef: Any?, property: KProperty<*>): R {
+            return get(name ?: property.name)
         }
+
+        inline operator fun <reified R : Any> setValue(thisRef: Any?, property: KProperty<*>, value: R) {
+            set(name ?: property.name, value)
+        }
+    }
+
+    inner class TypedDelegate<T : Any> internal constructor(val name: String? = null, val serializer: KSerializer<T>) :
+        ReadWriteProperty<Any?, T> {
+        override fun getValue(thisRef: Any?, property: KProperty<*>): T =
+            get(name ?: property.name, serializer)
 
         override fun setValue(thisRef: Any?, property: KProperty<*>, value: T) {
             set(name ?: property.name, value, serializer)
         }
+
     }
 
-    fun <T : Any> by(name: String) = Delegate<T>(null, name)
-    fun <T : Any> by(serializer: KSerializer<T>) = Delegate(serializer, null)
-    fun <T : Any> by(name: String, serializer: KSerializer<T>) = Delegate<T>(serializer, name)
+    inline fun <reified T : Any> by(name: String) = Delegate(name)
+    fun <T : Any> by(serializer: KSerializer<T>) = TypedDelegate(null, serializer)
+    fun <T : Any> by(name: String, serializer: KSerializer<T>) = TypedDelegate<T>(name, serializer)
+
+    private val defaultSerializers: MutableMap<KClass<*>, KSerializer<*>> = mutableMapOf()
+
+    fun <R : Any> setDefaultSerializer(serializer: KSerializer<R>, klass: KClass<R>) {
+        defaultSerializers[klass] = serializer
+    }
+
+    inline fun <reified R : Any> setDefaultSerializer(serializer: KSerializer<R>) =
+        setDefaultSerializer(serializer, R::class)
+
+    fun hasDefaultSerializer(klass: KClass<*>) = klass in defaultSerializers
+
+    operator fun contains(key: String) = underlying.getItem(key) != null
 }
 
 

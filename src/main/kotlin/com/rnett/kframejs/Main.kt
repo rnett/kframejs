@@ -50,7 +50,9 @@ fun listTest(vararg v: Int) = v.map { Test2(it) }
 @ImplicitReflectionSerializer
 fun main(args: Array<String>) {
 
-    var testStore: List<Test2> by LocalStorage.by("testStore", Test2.serializer().list)
+    LocalStorage += Test2.serializer().list
+
+    var testStore: List<Test2> by LocalStorage
     testStore = listTest(1, 2, 3)
 
     console.log("Test from Delegate: ", testStore)
@@ -58,6 +60,7 @@ fun main(args: Array<String>) {
     console.log("Test from Store", t)
 
     t.forEach { console.log(it.valueFunc()) }
+    testStore.forEach { console.log(it.valueFunc()) }
 
 
 
