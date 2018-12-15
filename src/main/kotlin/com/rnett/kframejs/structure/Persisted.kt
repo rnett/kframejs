@@ -6,9 +6,6 @@ import kotlinx.serialization.dumps
 import kotlinx.serialization.loads
 import kotlin.browser.localStorage
 import kotlin.browser.sessionStorage
-import kotlin.collections.MutableMap
-import kotlin.collections.contains
-import kotlin.collections.mutableMapOf
 import kotlin.collections.set
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KClass
@@ -130,8 +127,6 @@ sealed class Storage(val underlying: JsStorage) {
     operator fun contains(key: String) = underlying.getItem(key) != null
 }
 
-
 object LocalStorage : Storage(localStorage)
-
 
 object SessionStorage : Storage(sessionStorage)
