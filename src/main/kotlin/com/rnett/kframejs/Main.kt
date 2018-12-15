@@ -12,7 +12,7 @@ import kotlinx.serialization.Serializable
     inputs (check numeric)
     script via lambda?
 
-    positioning of bindings doesn't work
+    positioning of bindings doesn't work (add wrapper helper?)
 
     transaction{ } style multiple style/attribute editing
 

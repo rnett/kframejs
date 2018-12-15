@@ -16,13 +16,26 @@ typealias JsStorage = RawJsStorage
 
 class StorageException(message: String) : RuntimeException(message)
 
-sealed class Storage(val underlying: JsStorage) {
+sealed class Storage(val underlying: JsStorage, val storageName: String) {
 
     private val serializers: MutableMap<String, KSerializer<*>> = mutableMapOf()
 
     fun setKeySeralizerOnly(key: String, serializer: KSerializer<*>) {
         serializers[key] = serializer
     }
+
+    private val defaultSerializers: MutableMap<KClass<*>, KSerializer<*>> = mutableMapOf()
+
+    fun <R : Any> setDefaultSerializer(serializer: KSerializer<R>, klass: KClass<R>) {
+        defaultSerializers[klass] = serializer
+    }
+
+    inline fun <reified R : Any> setDefaultSerializer(serializer: KSerializer<R>) =
+        setDefaultSerializer(serializer, R::class)
+
+    fun hasDefaultSerializer(klass: KClass<*>) = klass in defaultSerializers
+
+    operator fun contains(key: String) = underlying.getItem(key) != null
 
     inline fun <reified R : Any> setSerializer(key: String, serializer: KSerializer<R>) {
         setKeySeralizerOnly(key, serializer)
@@ -47,13 +60,13 @@ sealed class Storage(val underlying: JsStorage) {
                 serializer,
                 it
             )
-        } ?: throw StorageException("Key $key is not present in storage")
+        } ?: throw StorageException("Key $key is not present in $storageName")
     }
 
 
     inline operator fun <reified R : Any> get(key: String): R = get(
         key,
-        getSerializer(key) ?: throw StorageException("No Serializer for $key")
+        getSerializer(key) ?: throw StorageException("No Serializer for $key for $storageName")
     )
 
     inline fun <reified R : Any> getOrNull(key: String): R? = try {
@@ -79,7 +92,7 @@ sealed class Storage(val underlying: JsStorage) {
     }
 
     inline operator fun <reified R : Any> set(key: String, value: R) {
-        set(key, value, getSerializer(key) ?: throw StorageException("No Serializer for $key"))
+        set(key, value, getSerializer(key) ?: throw StorageException("No Serializer for $key for $storageName"))
     }
 
     fun remove(key: String) = underlying.removeItem(key)
@@ -112,21 +125,8 @@ sealed class Storage(val underlying: JsStorage) {
     inline fun <reified T : Any> by(name: String) = Delegate(name)
     fun <T : Any> by(serializer: KSerializer<T>) = TypedDelegate(null, serializer)
     fun <T : Any> by(name: String, serializer: KSerializer<T>) = TypedDelegate<T>(name, serializer)
-
-    private val defaultSerializers: MutableMap<KClass<*>, KSerializer<*>> = mutableMapOf()
-
-    fun <R : Any> setDefaultSerializer(serializer: KSerializer<R>, klass: KClass<R>) {
-        defaultSerializers[klass] = serializer
-    }
-
-    inline fun <reified R : Any> setDefaultSerializer(serializer: KSerializer<R>) =
-        setDefaultSerializer(serializer, R::class)
-
-    fun hasDefaultSerializer(klass: KClass<*>) = klass in defaultSerializers
-
-    operator fun contains(key: String) = underlying.getItem(key) != null
 }
 
-object LocalStorage : Storage(localStorage)
+object LocalStorage : Storage(localStorage, "Local Storage")
 
-object SessionStorage : Storage(sessionStorage)
+object SessionStorage : Storage(sessionStorage, "Session Storage")
