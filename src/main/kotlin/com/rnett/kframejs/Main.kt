@@ -17,6 +17,8 @@ import kotlinx.serialization.Serializable
     transaction{ } style multiple style/attribute editing
 
     site/multipage stuff
+
+    https://github.com/eriwen/gradle-js-plugin
 */
 
 /**
