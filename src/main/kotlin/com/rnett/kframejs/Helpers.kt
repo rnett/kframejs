@@ -1,8 +1,8 @@
 package com.rnett.kframejs
 
-import com.rnett.kframejs.structure.AnyElement
-import com.rnett.kframejs.structure.Element
-import com.rnett.kframejs.structure.W3Element
+import com.rnett.kframejs.structure.element.AnyElement
+import com.rnett.kframejs.structure.element.Element
+import com.rnett.kframejs.structure.element.W3Element
 
 inline fun <T> Iterable<T>.applyForEach(func: T.() -> Unit) = also { forEach { it.apply(func) } }
 inline fun <T> Sequence<T>.applyForEach(func: T.() -> Unit) = also { forEach { it.apply(func) } }

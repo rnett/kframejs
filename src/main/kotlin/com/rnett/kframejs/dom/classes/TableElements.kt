@@ -1,7 +1,7 @@
 package com.rnett.kframejs.dom.classes
 
-import com.rnett.kframejs.structure.CanHaveElement
-import com.rnett.kframejs.structure.DisplayElement
+import com.rnett.kframejs.structure.element.CanHaveElement
+import com.rnett.kframejs.structure.element.DisplayElement
 import org.w3c.dom.HTMLElement
 import org.w3c.dom.HTMLTableElement
 import org.w3c.dom.HTMLTableRowElement

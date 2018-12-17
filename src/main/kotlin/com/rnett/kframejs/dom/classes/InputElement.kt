@@ -1,8 +1,8 @@
 package com.rnett.kframejs.dom.classes
 
-import com.rnett.kframejs.structure.CanHaveElement
-import com.rnett.kframejs.structure.DisplayElement
-import com.rnett.kframejs.structure.W3Element
+import com.rnett.kframejs.structure.element.CanHaveElement
+import com.rnett.kframejs.structure.element.DisplayElement
+import com.rnett.kframejs.structure.element.W3Element
 import org.w3c.dom.HTMLInputElement
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KMutableProperty0
@@ -93,12 +93,12 @@ class DefaultInputElement<T>(
     val rawValidator: (String) -> Boolean
 ) : InputElement<DefaultInputElement<T>, T, HTMLInputElement>(tag, parent, validator, onInvalid) {
 
-    override fun getValue(): T = fromRaw(underlying.value ?: "")
+    override fun getValue(): T = fromRaw(underlying.value)
     override fun setValue(value: T) {
         attributes.value = toRaw(value)
     }
 
-    override fun isRawValid(): Boolean = rawValidator(underlying.value ?: "") &&
+    override fun isRawValid(): Boolean = rawValidator(underlying.value) &&
         try {
             getValue()
             true

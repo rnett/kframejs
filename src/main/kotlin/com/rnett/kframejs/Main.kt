@@ -1,8 +1,12 @@
 package com.rnett.kframejs
 
 import com.rnett.kframejs.dom.*
-import com.rnett.kframejs.structure.*
-import com.rnett.kframejs.structure.styles.Color
+import com.rnett.kframejs.structure.addons.Router
+import com.rnett.kframejs.structure.addons.subPageNoData
+import com.rnett.kframejs.structure.element.DisplayElement
+import com.rnett.kframejs.structure.element.DisplayView
+import com.rnett.kframejs.structure.element.page
+import com.rnett.kframejs.structure.element.styles.Color
 import kotlinx.serialization.ImplicitReflectionSerializer
 import kotlinx.serialization.Serializable
 
@@ -66,10 +70,10 @@ fun main(args: Array<String>) {
                         +"Click Me!"
                         on.click {
                             parent.style {
-                                if (backgroundColor == Color.Orange)
-                                    backgroundColor = Color.Lightblue
+                                backgroundColor = if (backgroundColor == Color.Orange)
+                                    Color.Lightblue
                                 else
-                                    backgroundColor = Color.Orange
+                                    Color.Orange
                             }
                         }
                         on.click {

@@ -1,7 +1,7 @@
 package com.rnett.kframejs.dom
 
 import com.rnett.kframejs.dom.classes.A
-import com.rnett.kframejs.structure.*
+import com.rnett.kframejs.structure.element.*
 import org.w3c.dom.HTMLBRElement
 import org.w3c.dom.HTMLParagraphElement
 

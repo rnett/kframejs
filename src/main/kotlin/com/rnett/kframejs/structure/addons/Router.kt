@@ -1,5 +1,7 @@
-package com.rnett.kframejs.structure
+package com.rnett.kframejs.structure.addons
 
+import com.rnett.kframejs.structure.element.AnyElement
+import com.rnett.kframejs.structure.element.KFrameElementDSL
 import kotlin.browser.window
 
 internal data class SubpageInstance(val subpage: Subpage, val data: Map<String, String>) {
@@ -11,6 +13,7 @@ internal data class SubpageInstance(val subpage: Subpage, val data: Map<String, 
                 ""
 }
 
+@Suppress("ObjectPropertyName")
 object Router {
 
     internal var _currentPage: SubpageInstance? = null

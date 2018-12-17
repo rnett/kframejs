@@ -1,7 +1,7 @@
 package com.rnett.kframejs.dom
 
 import com.rnett.kframejs.dom.classes.ListElement
-import com.rnett.kframejs.structure.*
+import com.rnett.kframejs.structure.element.*
 import org.w3c.dom.HTMLLIElement
 import org.w3c.dom.HTMLOListElement
 import org.w3c.dom.HTMLUListElement

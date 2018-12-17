@@ -1,5 +1,6 @@
-package com.rnett.kframejs.structure
+package com.rnett.kframejs.structure.element
 
+import com.rnett.kframejs.structure.addons.*
 import org.w3c.dom.events.Event
 import kotlin.browser.document
 import kotlin.reflect.KProperty0
@@ -123,13 +124,13 @@ abstract class Element<E : Element<E, U>, U : W3Element>(val tag: String, val ra
         return this
     }
 
-    operator fun invoke(vararg classes: String): E {
+    operator fun invoke(vararg classesOrId: String): E {
 
-        if (classes.size == 1 && classes[0].startsWith("#"))
-            this.id == classes[0].drop(1)
+        if (classesOrId.size == 1 && classesOrId[0].startsWith("#"))
+            this.id = classesOrId[0].drop(1)
         else {
             this.classes.clear()
-            this.classes.addAll(classes)
+            this.classes.addAll(classesOrId)
         }
 
         return this as E
@@ -209,9 +210,9 @@ abstract class Element<E : Element<E, U>, U : W3Element>(val tag: String, val ra
         return EventHandler(this, event, useCapture, handler)
     }
 
-    val currentListeners = mutableSetOf<String>()
+    private val currentListeners = mutableSetOf<String>()
 
-    //TODO getting muptiple page updates when using multiple `on`s
+    //TODO getting multiple page updates when using multiple `on`s
     fun <H : Event> on(
         event: String,
         useCapture: Boolean = false,

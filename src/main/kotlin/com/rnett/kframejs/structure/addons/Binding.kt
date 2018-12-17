@@ -1,5 +1,6 @@
-package com.rnett.kframejs.structure
+package com.rnett.kframejs.structure.addons
 
+import com.rnett.kframejs.structure.element.*
 import kotlin.reflect.KProperty0
 
 @DslMarker
@@ -104,7 +105,10 @@ data class BuildersBindingValue<T>(val builders: List<BindingElementBuilder<*, T
     override fun set(element: AnyElement, value: T) {
         element.attributes.clear()
         element.innerHTML = ""
-        builders.forEach { (it as BindingElementBuilder<*, T>)(element, value) }
+        builders.forEach {
+            @Suppress("USELESS_CAST")
+            (it as BindingElementBuilder<*, T>)(element, value)
+        }
     }
 }
 

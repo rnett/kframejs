@@ -1,6 +1,7 @@
-package com.rnett.kframejs.structure
+package com.rnett.kframejs.structure.addons
 
 import com.rnett.kframejs.descendants
+import com.rnett.kframejs.structure.element.AnyElement
 
 @DslMarker
 @Target(
@@ -22,7 +23,7 @@ annotation class SelectorDSL
     AnnotationTarget.PROPERTY_GETTER,
     AnnotationTarget.PROPERTY
 )
-annotation class SelectorSeperatorDSL
+annotation class SelectorSeparatorDSL
 
 class Selector private constructor(private val ms: MutableList<SelectorElement>) {
     constructor() : this(mutableListOf())
@@ -46,7 +47,7 @@ class Selector private constructor(private val ms: MutableList<SelectorElement>)
             ms.last().addFilter(filter)
     }
 
-    fun addSeperator(separator: SelectorSeparator) = copy().apply {
+    fun addSeparator(separator: SelectorSeparator) = copy().apply {
         if (ms.last().next == null)
             ms.last()._next = separator
         else
@@ -55,10 +56,11 @@ class Selector private constructor(private val ms: MutableList<SelectorElement>)
 
 }
 
-@SelectorSeperatorDSL
+@Suppress("ObjectPropertyName")
+@SelectorSeparatorDSL
 val `$`
     get() = Selector()
-@SelectorSeperatorDSL
+@SelectorSeparatorDSL
 val blankSelector
     get() = `$`
 
@@ -78,7 +80,7 @@ data class SelectorElement(
         return if (next == null)
             candidates.distinct()
         else
-            candidates.flatMap { next!!.canidates(it) }.distinct()
+            candidates.flatMap { next!!.candidates(it) }.distinct()
     }
 
     internal fun addFilter(filter: SelectorFilter) {
@@ -132,7 +134,7 @@ sealed class SelectorFilter {
             }
     }
 
-    class OnlyChild : SelectorFilter() {
+    object OnlyChild : SelectorFilter() {
         override fun matches(element: AnyElement) = element.parent.children.size == 1
     }
 
@@ -158,29 +160,29 @@ sealed class SelectorFilter {
 }
 
 sealed class SelectorSeparator {
-    abstract fun canidates(start: AnyElement): List<AnyElement>
+    abstract fun candidates(start: AnyElement): List<AnyElement>
 
-    class Descendant : SelectorSeparator() {
-        override fun canidates(start: AnyElement) = start.descendants()
+    object Descendant : SelectorSeparator() {
+        override fun candidates(start: AnyElement) = start.descendants()
     }
 
-    class Child : SelectorSeparator() {
-        override fun canidates(start: AnyElement) = start.children
+    object Child : SelectorSeparator() {
+        override fun candidates(start: AnyElement) = start.children
     }
 
-    class NextTo : SelectorSeparator() {
-        override fun canidates(start: AnyElement): List<AnyElement> {
+    object NextTo : SelectorSeparator() {
+        override fun candidates(start: AnyElement): List<AnyElement> {
             val index = start.parent.children.indexOf(start)
             return listOfNotNull(start.parent.children.getOrNull(index + 1), start.parent.children.getOrNull(index - 1))
         }
     }
 
-    class Siblings : SelectorSeparator() {
-        override fun canidates(start: AnyElement) = start.parent.children - start
+    object Siblings : SelectorSeparator() {
+        override fun candidates(start: AnyElement) = start.parent.children - start
     }
 
-    class Parent : SelectorSeparator() {
-        override fun canidates(start: AnyElement) = listOfNotNull(start.rawParent as? AnyElement)
+    object Parent : SelectorSeparator() {
+        override fun candidates(start: AnyElement) = listOfNotNull(start.rawParent as? AnyElement)
     }
 }
 
@@ -188,7 +190,7 @@ sealed class SelectorSeparator {
 
 typealias SelectorBuilder = Selector.() -> Selector
 
-//Note: multiple calls apply as and, mutiple args apply as or
+//Note: multiple calls apply as and, multiple args apply as or
 
 @SelectorDSL
 fun Selector.tag(tag: String) = addFilter(SelectorFilter.Tag(tag))
@@ -227,7 +229,7 @@ fun Selector.firstChild() = childAt(0)
 fun Selector.lastChild() = childAt(-1)
 
 @SelectorDSL
-fun Selector.onlyChild() = addFilter(SelectorFilter.OnlyChild())
+fun Selector.onlyChild() = addFilter(SelectorFilter.OnlyChild)
 
 @SelectorDSL
 fun Selector.odd() = addFilter(SelectorFilter.OddEven(true))
@@ -251,24 +253,24 @@ fun Selector.custom(passes: (AnyElement) -> Boolean) = addFilter(SelectorFilter.
 //TODO add other hard index instead of parent index operators
 //TODO firstOfType
 
-// seperators
+// separators
 
-@SelectorSeperatorDSL
+@SelectorSeparatorDSL
 val Selector.child
-    get() = addSeperator(SelectorSeparator.Child())
+    get() = addSeparator(SelectorSeparator.Child)
 
-@SelectorSeperatorDSL
+@SelectorSeparatorDSL
 val Selector.descendant
-    get() = addSeperator(SelectorSeparator.Descendant())
+    get() = addSeparator(SelectorSeparator.Descendant)
 
-@SelectorSeperatorDSL
+@SelectorSeparatorDSL
 val Selector.nextTo
-    get() = addSeperator(SelectorSeparator.NextTo())
+    get() = addSeparator(SelectorSeparator.NextTo)
 
-@SelectorSeperatorDSL
+@SelectorSeparatorDSL
 val Selector.siblings
-    get() = addSeperator(SelectorSeparator.Siblings())
+    get() = addSeparator(SelectorSeparator.Siblings)
 
-@SelectorSeperatorDSL
+@SelectorSeparatorDSL
 val Selector.parent
-    get() = addSeperator(SelectorSeparator.Parent())
+    get() = addSeparator(SelectorSeparator.Parent)

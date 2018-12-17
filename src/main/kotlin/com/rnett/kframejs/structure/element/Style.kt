@@ -1,7 +1,7 @@
-package com.rnett.kframejs.structure
+package com.rnett.kframejs.structure.element
 
-import com.rnett.kframejs.structure.styles.Color
-import com.rnett.kframejs.structure.styles.Size
+import com.rnett.kframejs.structure.element.styles.Color
+import com.rnett.kframejs.structure.element.styles.Size
 
 class Style(val element: AnyElement) : AttrDelegatableMap() {
 
@@ -16,7 +16,7 @@ class Style(val element: AnyElement) : AttrDelegatableMap() {
             element.underlying.setAttribute("style", v)
         }
 
-    var map: Map<String, String>
+    private var map: Map<String, String>
         get() {
             return raw.split(";").filter { it.isNotBlank() }
                 .associate { it.substringBefore(":").trim() to it.substringAfter(":").trim() }
@@ -38,7 +38,7 @@ class Style(val element: AnyElement) : AttrDelegatableMap() {
 
     override fun containsValue(value: String): Boolean = map.containsValue(value)
 
-    override fun get(key: String): String? = map.get(key)
+    override fun get(key: String): String? = map[key]
 
     override fun isEmpty(): Boolean = map.isEmpty()
 

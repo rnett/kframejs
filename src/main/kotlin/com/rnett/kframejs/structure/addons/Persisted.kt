@@ -1,4 +1,4 @@
-package com.rnett.kframejs.structure
+package com.rnett.kframejs.structure.addons
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.cbor.CBOR
@@ -124,7 +124,7 @@ sealed class Storage(val underlying: JsStorage, val storageName: String) {
 
     inline fun <reified T : Any> by(name: String) = Delegate(name)
     fun <T : Any> by(serializer: KSerializer<T>) = TypedDelegate(null, serializer)
-    fun <T : Any> by(name: String, serializer: KSerializer<T>) = TypedDelegate<T>(name, serializer)
+    fun <T : Any> by(name: String, serializer: KSerializer<T>) = TypedDelegate(name, serializer)
 }
 
 object LocalStorage : Storage(localStorage, "Local Storage")

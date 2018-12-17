@@ -4,7 +4,8 @@ import com.rnett.kframejs.dom.classes.Table
 import com.rnett.kframejs.dom.classes.TableElement
 import com.rnett.kframejs.dom.classes.TableRowElement
 import com.rnett.kframejs.dom.classes.TableSectionElement
-import com.rnett.kframejs.structure.*
+import com.rnett.kframejs.structure.addons.binding
+import com.rnett.kframejs.structure.element.*
 import org.w3c.dom.HTMLTableCellElement
 import org.w3c.dom.HTMLTableSectionElement
 import kotlin.reflect.KProperty0

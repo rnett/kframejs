@@ -3,7 +3,7 @@ package com.rnett.kframejs.dom
 import com.rnett.kframejs.dom.classes.DefaultInputElement
 import com.rnett.kframejs.dom.classes.InputBinding
 import com.rnett.kframejs.dom.classes.Validator
-import com.rnett.kframejs.structure.*
+import com.rnett.kframejs.structure.element.*
 import org.w3c.dom.HTMLInputElement
 import kotlin.reflect.KMutableProperty0
 

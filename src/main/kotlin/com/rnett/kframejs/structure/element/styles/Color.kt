@@ -1,4 +1,4 @@
-package com.rnett.kframejs.structure.styles
+package com.rnett.kframejs.structure.element.styles
 
 import kotlin.math.max
 import kotlin.math.min
@@ -267,14 +267,16 @@ sealed class Color {
 
             var h = 0f
 
-            if (max == min)
-                h = 0f
-            else if (max == r)
-                h = (60 * (g - b) / (max - min) + 360) % 360
-            else if (max == g)
-                h = 60 * (b - r) / (max - min) + 120
-            else if (max == b)
-                h = 60 * (r - g) / (max - min) + 240
+            when (max) {
+                min -> h = 0f
+                r -> h = (60 * (g - b) / (max - min) + 360) % 360
+                g -> h = 60 * (b - r) / (max - min) + 120
+                b -> h = 60 * (r - g) / (max - min) + 240
+
+                //  Calculate the Luminance
+
+                //  Calculate the Saturation
+            }
 
             //  Calculate the Luminance
 
@@ -284,12 +286,11 @@ sealed class Color {
 
             var s = 0f
 
-            s = if (max == min)
-                0f
-            else if (l <= .5f)
-                (max - min) / (max + min)
-            else
-                (max - min) / (2f - max - min)
+            s = when {
+                max == min -> 0f
+                l <= .5f -> (max - min) / (max + min)
+                else -> (max - min) / (2f - max - min)
+            }
 
             return Triple(h.roundToInt(), (s * 100).roundToInt(), (l * 100).roundToInt())
         }
@@ -299,7 +300,7 @@ sealed class Color {
          *
          * @param h Hue is specified as degrees in the range 0 - 360.
          * @param s Saturation is specified as a percentage in the range 1 - 100.
-         * @param l Lumanance is specified as a percentage in the range 1 - 100.
+         * @param l Luminance is specified as a percentage in the range 1 - 100.
          */
         fun hslToRGB(hue: Int, sat: Int, lum: Int): Triple<Int, Int, Int> {
             if (sat < 0.0f || sat > 100.0f) {
@@ -327,9 +328,9 @@ sealed class Color {
 
             val p = 2 * l - q
 
-            var r = max(0.0f, HueToRGB(p, q, h + 1.0f / 3.0f))
-            var g = max(0.0f, HueToRGB(p, q, h))
-            var b = max(0.0f, HueToRGB(p, q, h - 1.0f / 3.0f))
+            var r = max(0.0f, hueToRGB(p, q, h + 1.0f / 3.0f))
+            var g = max(0.0f, hueToRGB(p, q, h))
+            var b = max(0.0f, hueToRGB(p, q, h - 1.0f / 3.0f))
 
             r = min(r, 1.0f)
             g = min(g, 1.0f)
@@ -338,7 +339,7 @@ sealed class Color {
             return Triple(r.roundToInt(), g.roundToInt(), b.roundToInt())
         }
 
-        private fun HueToRGB(p: Float, q: Float, h: Float): Float {
+        private fun hueToRGB(p: Float, q: Float, h: Float): Float {
             var h = h
             if (h < 0) h += 1f
 
@@ -385,6 +386,7 @@ data class NamedColor internal constructor(val name: String, val red: Int, val g
 
     companion object {
 
+        @Suppress("ObjectPropertyName")
         private val _colors = mutableMapOf<String, NamedColor>()
         val colors: Map<String, NamedColor> get() = _colors
 

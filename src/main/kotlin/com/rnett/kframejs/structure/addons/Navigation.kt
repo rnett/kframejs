@@ -1,4 +1,7 @@
-package com.rnett.kframejs.structure
+package com.rnett.kframejs.structure.addons
+
+import com.rnett.kframejs.structure.element.AnyElement
+import com.rnett.kframejs.structure.element.Page
 
 infix fun Page.select(m: Selector): List<AnyElement> = m.select(elements.toList())
 operator fun Page.get(m: Selector): List<AnyElement> = select(m)
@@ -24,11 +27,12 @@ operator fun Selector.get(elements: Iterable<AnyElement>) = this selectFrom elem
 operator fun Selector.get(elements: Sequence<AnyElement>) = this selectFrom elements
 operator fun Selector.get(page: Page) = this selectFrom page
 
-@SelectorSeperatorDSL
-fun `$`(jqyerySelector: String) = jquerySelector(jqyerySelector)
+@Suppress("FunctionName")
+@SelectorSeparatorDSL
+fun `$`(jquerySelector: String) = jquerySelector(jquerySelector)
 
 fun jquerySelector(jqyerySelector: String): Selector {
-    var start = `$`
+    var start = com.rnett.kframejs.structure.addons.`$`
 
     //TODO don't break on spaces in quotes
     val matches =

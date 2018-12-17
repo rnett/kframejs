@@ -1,6 +1,6 @@
 package com.rnett.kframejs.dom
 
-import com.rnett.kframejs.structure.*
+import com.rnett.kframejs.structure.element.*
 import org.w3c.dom.HTMLDivElement
 import org.w3c.dom.HTMLSpanElement
 

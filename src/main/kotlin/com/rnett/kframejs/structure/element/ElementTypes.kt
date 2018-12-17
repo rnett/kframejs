@@ -1,4 +1,4 @@
-package com.rnett.kframejs.structure
+package com.rnett.kframejs.structure.element
 
 import org.w3c.dom.Text
 

@@ -1,6 +1,7 @@
-package com.rnett.kframejs.structure
+package com.rnett.kframejs.structure.element
 
 import com.rnett.kframejs.dom.title
+import com.rnett.kframejs.structure.addons.*
 import org.w3c.dom.HTMLBodyElement
 import org.w3c.dom.HTMLHeadElement
 import org.w3c.dom.asList
@@ -87,3 +88,4 @@ class Head internal constructor(page: Page) :
     override fun internalAdd(element: AnyElement) {}
     operator fun invoke(builder: Head.() -> Unit) = apply(builder)
 }
+

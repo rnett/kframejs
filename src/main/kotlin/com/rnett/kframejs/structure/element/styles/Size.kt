@@ -1,5 +1,6 @@
-package com.rnett.kframejs.structure.styles
+package com.rnett.kframejs.structure.element.styles
 
+@Suppress("EnumEntryName")
 enum class Unit {
     percent, cm, em, rem, ex, `in`, mm, pc, pt, px, vh, vw, vmin, raw;
 
