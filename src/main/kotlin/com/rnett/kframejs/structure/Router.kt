@@ -88,3 +88,9 @@ fun subPageNoData(name: String, url: String, title: String, builder: () -> Unit)
     Router[name] = sp
     return sp
 }
+
+@KFrameElementDSL
+fun <E : AnyElement> E.routerLink(subpage: String): E = also { on.click { Router(subpage) } }
+
+@KFrameElementDSL
+fun <E : AnyElement> E.routerLink(subpage: Subpage): E = also { on.click { Router(subpage) } }
