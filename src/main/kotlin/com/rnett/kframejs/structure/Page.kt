@@ -4,7 +4,6 @@ import com.rnett.kframejs.dom.title
 import org.w3c.dom.HTMLBodyElement
 import org.w3c.dom.HTMLHeadElement
 import org.w3c.dom.asList
-import org.w3c.dom.get
 import kotlin.browser.document
 import kotlin.browser.window
 import org.w3c.dom.Element as W3Element
@@ -70,14 +69,20 @@ class Page {
 }
 
 class Body internal constructor(page: Page) :
-    W3ElementWrapper<HTMLBodyElement>(document.getElementsByTagName("body")[0]!! as HTMLBodyElement, page),
+    W3ElementWrapper<HTMLBodyElement>(
+        (document.getElementsByTagName("body").asList().firstOrNull()
+            ?: document.createElement("body")) as HTMLBodyElement, page
+    ),
     IDisplayElement<HTMLBodyElement> {
     override fun internalAdd(element: AnyElement) {}
     operator fun invoke(builder: Body.() -> Unit) = apply(builder)
 }
 
 class Head internal constructor(page: Page) :
-    W3ElementWrapper<HTMLHeadElement>(document.getElementsByTagName("head")[0]!! as HTMLHeadElement, page),
+    W3ElementWrapper<HTMLHeadElement>(
+        (document.getElementsByTagName("head").asList().firstOrNull()
+            ?: document.createElement("head")) as HTMLHeadElement, page
+    ),
     IMetaElement<HTMLHeadElement> {
     override fun internalAdd(element: AnyElement) {}
     operator fun invoke(builder: Head.() -> Unit) = apply(builder)

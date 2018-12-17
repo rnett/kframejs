@@ -24,7 +24,7 @@ object Router {
 
     operator fun set(name: String, subpage: Subpage) = addPage(name, subpage)
 
-    fun goto(subpage: String, data: Map<String, String> = emptyMap()): Boolean {
+    fun goto(subpage: String, data: Map<String, String>): Boolean {
         pages[subpage].let {
             return if (it != null) {
                 goto(it, data)
@@ -34,14 +34,27 @@ object Router {
         }
     }
 
-    fun goto(subpage: Subpage, data: Map<String, String> = emptyMap()) {
+    fun goto(subpage: String, data: Map<String, Any>) = goto(subpage, data.mapValues { it.value.toString() })
+    fun goto(subpage: String, vararg data: Pair<String, Any>) = goto(subpage, data.toMap())
+
+    fun goto(subpage: Subpage, data: Map<String, String>) {
         val si = SubpageInstance(subpage, data)
         window.history.pushState(null, subpage.title(data), si.urlString())
         _currentPage = si
     }
 
-    operator fun invoke(subpage: String, data: Map<String, String> = emptyMap()) = goto(subpage, data)
-    operator fun invoke(subpage: Subpage, data: Map<String, String> = emptyMap()) = goto(subpage, data)
+    fun goto(subpage: Subpage, data: Map<String, Any>) = goto(subpage, data.mapValues { it.value.toString() })
+    fun goto(subpage: Subpage, vararg data: Pair<String, Any>) = goto(subpage, data.toMap())
+
+
+    operator fun invoke(subpage: String, data: Map<String, String>) = goto(subpage, data)
+    operator fun invoke(subpage: Subpage, data: Map<String, String>) = goto(subpage, data)
+
+    operator fun invoke(subpage: String, data: Map<String, Any>) = goto(subpage, data)
+    operator fun invoke(subpage: Subpage, data: Map<String, Any>) = goto(subpage, data)
+
+    operator fun invoke(subpage: String, vararg data: Pair<String, Any>) = goto(subpage, *data)
+    operator fun invoke(subpage: Subpage, vararg data: Pair<String, Any>) = goto(subpage, *data)
 }
 
 open class Subpage(
