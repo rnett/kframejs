@@ -40,9 +40,22 @@ data class FunctionBindingCondition<T>(val func: AnyBinding<T>) : BindingConditi
     }
 }
 
+data class PropertiesBindingCondition(val props: List<KProperty0<*>>) : BindingCondition<List<*>>() {
+
+    private var lastValues: List<*> = value()
+
+    override fun needsUpdate(): Boolean = value() != lastValues
+
+    override fun update() {
+        lastValues = value()
+    }
+
+    override fun value() = props.map { it.get() }
+}
+
 data class PropertyBindingCondition<T>(val prop: KProperty0<T>) : BindingCondition<T>() {
 
-    private var lastValue: Any? = value()
+    private var lastValue: T = value()
 
     override fun needsUpdate(): Boolean = value() != lastValue
 
@@ -60,6 +73,12 @@ fun <R> binding(builder: FunctionBindingCondition.Builder.() -> R) = FunctionBin
     val result = builder(b)
     b.values().plus(result)
 }
+
+@BindingDSL
+fun binding(vararg props: KProperty0<*>) = props.toList().binding()
+
+@BindingDSL
+fun <T> binding(prop: KProperty0<T>) = prop.binding()
 
 data class BooleanBindingCondition(val func: BoolBinding) : BindingCondition<Boolean>() {
     override fun needsUpdate() = value()
@@ -101,7 +120,7 @@ data class Binding<T>(val element: AnyElement, val condition: BindingCondition<T
 class BindingException : RuntimeException("Binding already set")
 
 data class Watch<T>(val condition: BindingCondition<T>, val update: (T) -> Unit) {
-    internal fun doUpdate(force: Boolean = true) {
+    internal fun doUpdate(force: Boolean = false) {
         if (force || condition.needsUpdate()) {
             condition.update()
             update(condition.value())
@@ -113,6 +132,7 @@ fun <T> AnyBinding<T>.binding() = FunctionBindingCondition(this)
 fun BoolBinding.valueBinding() = FunctionBindingCondition(this)
 fun BoolBinding.binding() = BooleanBindingCondition(this)
 fun <T> KProperty0<T>.binding() = PropertyBindingCondition(this)
+fun List<KProperty0<*>>.binding() = PropertiesBindingCondition(this)
 
 /**
  * WARNING: Do not add elements inside a watch.  They will be updated every time the value changes

@@ -52,6 +52,15 @@ abstract class CanHaveElement<U : W3Element>(val page: Page, val underlying: U) 
 
     @BindingDSL
     infix fun <T> BindingCondition<T>.bindAll(builder: (T) -> Unit) = this@CanHaveElement.bindAll(this, builder)
+
+
+    fun Router.view(main: String, data: Map<String, String> = emptyMap()) {
+        goto(main, data)
+        this@view::_currentPage.binding() bindAll {
+            it?.build()
+            it?.apply { this@CanHaveElement.page.title = subpage.title(data) }
+        }
+    }
 }
 
 open class W3ElementWrapper<U : W3Element>(underlying: U, page: Page) : CanHaveElement<U>(page, underlying) {

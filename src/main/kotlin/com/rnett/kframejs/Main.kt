@@ -1,9 +1,7 @@
 package com.rnett.kframejs
 
 import com.rnett.kframejs.dom.*
-import com.rnett.kframejs.structure.DisplayElement
-import com.rnett.kframejs.structure.DisplayView
-import com.rnett.kframejs.structure.page
+import com.rnett.kframejs.structure.*
 import com.rnett.kframejs.structure.styles.Color
 import kotlinx.serialization.ImplicitReflectionSerializer
 import kotlinx.serialization.Serializable
@@ -50,71 +48,93 @@ fun listTest(vararg v: Int) = v.map { Test2(it) }
 fun main(args: Array<String>) {
 
     page {
-        var outer = body.div {
-            id = "test"
-            style {
-                display = "block"
-                padding = "30px"
-            }
-            div {
-                id = "test2"
+        var outer = body {
+            subPageNoData("main", "main", "Main Page") {
                 div {
-                    +"Green Test"
-                }
-            }
-            val para = p("Hello World")
-            br(2)
-            button {
-                +"Click Me!"
-                on.click {
-                    parent.style {
-                        if (backgroundColor == Color.Orange)
-                            backgroundColor = Color.Lightblue
-                        else
-                            backgroundColor = Color.Orange
+                    id = "test"
+                    style {
+                        display = "block"
+                        padding = "30px"
+                    }
+                    div {
+                        id = "test2"
+                        div {
+                            +"Green Test"
+                        }
+                    }
+                    val para = p("Hello World")
+                    br(2)
+                    button {
+                        +"Click Me!"
+                        on.click {
+                            parent.style {
+                                if (backgroundColor == Color.Orange)
+                                    backgroundColor = Color.Lightblue
+                                else
+                                    backgroundColor = Color.Orange
+                            }
+                        }
+                        on.click {
+                            para.innerHTML += "!"
+                        }
+                    }
+                    br(2)
+                    button {
+                        +"Reset !s (Double Click)"
+                        on.dblclick {
+                            para.innerHTML = "Hello World"
+                        }
+                    }
+                    br(2)
+
+                    val testText = Box("test")
+
+                    stringInput(testText::value)
+
+                    p {
+                        +{ testText.value + " - color: " + parent.style.backgroundColor }
+                    }
+
+                    p("Generic Input test")
+
+                    val test2 = Box(Tester("Hello"))
+
+                    input(test2::value, { Tester(it) }, { it.text })
+
+                    +test2::value
+
+                    br
+
+                    div {
+                        p {
+                            +"Known: "
+                            +{ test2.value.myText }
+                        }
+                    }
+
+                    div().button {
+                        +"Test Page"
+                        on.click {
+                            Router("test")
+                        }
                     }
                 }
-                on.click {
-                    para.innerHTML += "!"
+
+            }
+            subPageNoData("test", "test", "Test Page") {
+                div {
+                    p {
+                        +"This is the test page"
+                    }
+                    button {
+                        +"Main Page"
+                        on.click {
+                            Router("main")
+                        }
+                    }
                 }
             }
-            br(2)
-            button {
-                +"Reset !s (Double Click)"
-                on.dblclick {
-                    para.innerHTML = "Hello World"
-                }
-            }
-            br(2)
-
-            val testText = Box("test")
-
-            stringInput(testText::value)
-
-            p {
-                +{ testText.value + " - color: " + parent.style.backgroundColor }
-            }
-
-            p("Generic Input test")
-
-            val test2 = Box(Tester("Hello"))
-
-            input(test2::value, { Tester(it) }, { it.text })
-
-            +test2::value
-
-            br
-
-            div {
-                p {
-                    +"Known: "
-                    +{ test2.value.myText }
-                }
-            }
-
-        }
-        head.title {
-            +"KFrame JS Test"
+            Router.view("main")
         }
     }
 }
