@@ -49,5 +49,7 @@ class Attributes(val element: AnyElement) : AttrDelegatableMap() {
     var value by this
     var type by this
     var title by this
+    var src by this
+    var href by this
 
 }

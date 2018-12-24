@@ -141,6 +141,21 @@ inline fun TableRowElement.tdRow(
 }
 
 @KFrameElementDSL
+inline fun TableRowElement.tdRow(
+    crossinline values: () -> List<String>, klass: String = "", id: String = "", tdKlass: String = "",
+    crossinline tdBuilder: StandardDisplayElement<HTMLTableCellElement>.(String) -> Unit = {},
+    crossinline builder: ElementBuilder<TableRowElement> = {}
+) = tr(klass, id) {
+    values().mapIndexed { index, s -> { values()[index] } }.forEach {
+        td(tdKlass) {
+            +it
+            tdBuilder(it())
+        }
+    }
+    builder()
+}
+
+@KFrameElementDSL
 inline fun <T> TableRowElement.tdRow(
     vararg values: T, klass: String = "", id: String = "", tdKlass: String = "",
     crossinline builder: ElementBuilder<TableRowElement> = {},
@@ -224,6 +239,21 @@ inline fun TableRowElement.thRow(
     crossinline builder: ElementBuilder<TableRowElement> = {}
 ) = tr(klass, id) {
     values.forEach {
+        th(thKlass) {
+            +it
+            thBuilder(it())
+        }
+    }
+    builder()
+}
+
+@KFrameElementDSL
+inline fun TableRowElement.thRow(
+    crossinline values: () -> List<String>, klass: String = "", id: String = "", thKlass: String = "",
+    crossinline thBuilder: StandardDisplayElement<HTMLTableCellElement>.(String) -> Unit = {},
+    crossinline builder: ElementBuilder<TableRowElement> = {}
+) = tr(klass, id) {
+    values().mapIndexed { index, s -> { values()[index] } }.forEach {
         th(thKlass) {
             +it
             thBuilder(it())

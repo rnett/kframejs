@@ -2,6 +2,7 @@ package com.rnett.kframejs.dom
 
 import com.rnett.kframejs.structure.element.*
 import org.w3c.dom.HTMLDivElement
+import org.w3c.dom.HTMLElement
 import org.w3c.dom.HTMLSpanElement
 
 @KFrameElementDSL
@@ -68,3 +69,33 @@ inline fun <T> T.spans(
     @Suppress("UNCHECKED_CAST")
     return (outer as? StandardDisplayElement<HTMLSpanElement>)?.invoke { builder() }!!
 }
+
+@KFrameElementDSL
+inline fun <ParentType> ParentType.footer(
+    klass: String = "",
+    id: String = "",
+    crossinline builder: StandardDisplayElementBuilder<HTMLElement> = {}
+)
+        where ParentType : AnyDisplayElement, ParentType : CanHaveElement<*> =
+    StandardDisplayElement<HTMLElement>("footer", this).invoke {
+        if (klass != "")
+            this.klass = klass
+        if (id != "")
+            this.id = id
+        builder()
+    }
+
+@KFrameElementDSL
+inline fun <ParentType> ParentType.header(
+    klass: String = "",
+    id: String = "",
+    crossinline builder: StandardDisplayElementBuilder<HTMLElement> = {}
+)
+        where ParentType : AnyDisplayElement, ParentType : CanHaveElement<*> =
+    StandardDisplayElement<HTMLElement>("header", this).invoke {
+        if (klass != "")
+            this.klass = klass
+        if (id != "")
+            this.id = id
+        builder()
+    }

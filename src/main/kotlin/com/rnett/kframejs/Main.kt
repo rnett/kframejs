@@ -120,6 +120,10 @@ fun main(args: Array<String>) {
                             Router("test")
                         }
                     }
+
+                    div {
+
+                    }
                 }
 
             }

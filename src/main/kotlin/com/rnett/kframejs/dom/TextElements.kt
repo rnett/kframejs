@@ -3,6 +3,7 @@ package com.rnett.kframejs.dom
 import com.rnett.kframejs.dom.classes.A
 import com.rnett.kframejs.structure.element.*
 import org.w3c.dom.HTMLBRElement
+import org.w3c.dom.HTMLLabelElement
 import org.w3c.dom.HTMLParagraphElement
 
 @KFrameElementDSL
@@ -55,3 +56,18 @@ inline fun <T> T.br(lines: Int) where T : AnyDisplayElement, T : CanHaveElement<
 @KFrameElementDSL
 val <T> T.br where T : AnyDisplayElement, T : CanHaveElement<*>
     get() = br()
+
+@KFrameElementDSL
+inline fun <ParentType> ParentType.label(
+    klass: String = "",
+    id: String = "",
+    crossinline builder: StandardDisplayElementBuilder<HTMLLabelElement> = {}
+)
+        where ParentType : AnyDisplayElement, ParentType : CanHaveElement<*> =
+    StandardDisplayElement<HTMLLabelElement>("label", this).invoke {
+        if (klass != "")
+            this.klass = klass
+        if (id != "")
+            this.id = id
+        builder()
+    }
