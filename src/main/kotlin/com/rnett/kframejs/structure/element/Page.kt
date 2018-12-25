@@ -33,8 +33,13 @@ class Page {
 
     val elements get() = _elements.toSet()
 
-    fun update() {
-        _elements.forEach { it.update() }
+    fun preEventUpdate() {
+        _elements.forEach { it.preEventUpdate() }
+        watches.forEach { it.doUpdate() }
+    }
+
+    fun postEventUpdate() {
+        _elements.forEach { it.postEventUpdate() }
         watches.forEach { it.doUpdate() }
     }
 

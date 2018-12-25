@@ -5,6 +5,7 @@ import com.rnett.kframejs.structure.element.*
 import org.w3c.dom.HTMLBRElement
 import org.w3c.dom.HTMLLabelElement
 import org.w3c.dom.HTMLParagraphElement
+import org.w3c.dom.HTMLTextAreaElement
 
 @KFrameElementDSL
 inline fun <T> T.p(
@@ -65,6 +66,21 @@ inline fun <ParentType> ParentType.label(
 )
         where ParentType : AnyDisplayElement, ParentType : CanHaveElement<*> =
     StandardDisplayElement<HTMLLabelElement>("label", this).invoke {
+        if (klass != "")
+            this.klass = klass
+        if (id != "")
+            this.id = id
+        builder()
+    }
+
+@KFrameElementDSL
+inline fun <ParentType> ParentType.textarea(
+    klass: String = "",
+    id: String = "",
+    crossinline builder: StandardDisplayElementBuilder<HTMLTextAreaElement> = {}
+)
+        where ParentType : AnyDisplayElement, ParentType : CanHaveElement<*> =
+    StandardDisplayElement<HTMLTextAreaElement>("textarea", this).invoke {
         if (klass != "")
             this.klass = klass
         if (id != "")

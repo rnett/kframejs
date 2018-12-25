@@ -53,10 +53,18 @@ abstract class InputElement<E : InputElement<E, T, U>, T, U : W3Element>(
     fun valid() = isRawValid() && (validator?.invoke(getValue()) ?: true)
 
     fun updateFromBinding() {
-        binding?.apply { setValue(getter()) }
+        binding?.apply {
+            val newValue = getter()
+            if (isRawValid()) {
+                if (newValue != getValue()) {
+                    setValue(newValue)
+                }
+            } else
+                setValue(newValue)
+        }
     }
 
-    override fun onUpdate() {
+    override fun onPreEventUpdate() {
         val newValue = getValue()
         if (valid()) {
             binding?.apply { setter(newValue) }
@@ -65,6 +73,10 @@ abstract class InputElement<E : InputElement<E, T, U>, T, U : W3Element>(
             onInvalid()
 
         binding?.apply { setValue(getter()) }
+    }
+
+    override fun onPostEventUpdate() {
+        updateFromBinding()
     }
 
     var value: T
@@ -95,7 +107,7 @@ class DefaultInputElement<T>(
 
     override fun getValue(): T = fromRaw(underlying.value)
     override fun setValue(value: T) {
-        attributes.value = toRaw(value)
+        underlying.value = toRaw(value)
     }
 
     override fun isRawValid(): Boolean = rawValidator(underlying.value) &&

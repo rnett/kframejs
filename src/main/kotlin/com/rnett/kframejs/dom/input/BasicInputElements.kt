@@ -1,4 +1,4 @@
-package com.rnett.kframejs.dom
+package com.rnett.kframejs.dom.input
 
 import com.rnett.kframejs.dom.classes.DefaultInputElement
 import com.rnett.kframejs.dom.classes.InputBinding
@@ -259,6 +259,3 @@ inline fun <ParentType> ParentType.rawInput(
             this.id = id
         builder()
     }
-
-
-//TODO dropdowns, combo boxes?, all the rest (ugh)

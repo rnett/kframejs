@@ -223,7 +223,7 @@ abstract class Element<E : Element<E, U>, U : W3Element>(val tag: String, val ra
                 { handler(it as H) }
             } else {
                 currentListeners.add(event);
-                { handler(it as H); page.update() }
+                { page.preEventUpdate(); handler(it as H); page.postEventUpdate() }
             }
 
         underlying.addEventListener(event, actualHandler, useCapture)
@@ -236,12 +236,24 @@ abstract class Element<E : Element<E, U>, U : W3Element>(val tag: String, val ra
 
     private var myBinding: Binding<*>? = null
 
-    fun update() {
+    /**
+     * Load changes from client
+     */
+    fun preEventUpdate() {
         myBinding?.checkAndUpdate()
-        onUpdate()
+        onPreEventUpdate()
     }
 
-    protected open fun onUpdate() {}
+    /**
+     * Save changes from model
+     */
+    fun postEventUpdate() {
+        myBinding?.checkAndUpdate()
+        onPostEventUpdate()
+    }
+
+    protected open fun onPreEventUpdate() {}
+    protected open fun onPostEventUpdate() {}
 
     @BindingDSL
     fun <T> bindNow(cond: BindingCondition<T>): E {
