@@ -2,19 +2,14 @@ package com.rnett.kframejs.dom.classes
 
 import com.rnett.kframejs.structure.addons.binding
 import com.rnett.kframejs.structure.addons.watch
-import com.rnett.kframejs.structure.element.CanHaveElement
-import com.rnett.kframejs.structure.element.DisplayElement
-import com.rnett.kframejs.structure.element.Page
+import com.rnett.kframejs.structure.element.*
 import org.w3c.dom.HTMLInputElement
-import kotlin.collections.find
-import kotlin.collections.forEach
-import kotlin.collections.mutableMapOf
-import kotlin.collections.mutableSetOf
+import org.w3c.dom.HTMLOptionElement
+import org.w3c.dom.HTMLSelectElement
 import kotlin.collections.set
-import kotlin.collections.toMap
 import kotlin.reflect.KMutableProperty0
 
-//TODO checkbox, radio buttons, dropdown, combobox, autoselect dropdown, multiline string input
+//TODO dropdown, combobox, autoselect dropdown, multiline string input
 
 class CheckboxElement(parent: CanHaveElement<*>) :
     InputElement<CheckboxElement, Boolean, HTMLInputElement>("input", parent, { true }, {}) {
@@ -55,8 +50,6 @@ class NullableCheckboxElement(parent: CanHaveElement<*>) :
     }
 }
 
-private val usedNames = mutableSetOf<String>()
-
 private val source = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
 
 internal fun randomString(length: Int) =
@@ -64,10 +57,12 @@ internal fun randomString(length: Int) =
         (0..length).forEach { _ -> append(source.random()) }
     }
 
+
+private val usedGroupNames = mutableSetOf<String>()
 internal fun genGroupName(): String {
     var len = 10
     var name = randomString(len)
-    while (name in usedNames) {
+    while (name in usedGroupNames) {
         len++
         name = randomString(len)
     }
@@ -90,10 +85,10 @@ class RadioGroup<T>(val binding: InputBinding<T>, val page: Page, val groupName:
     )
 
     init {
-        if (groupName in usedNames)
+        if (groupName in usedGroupNames)
             throw IllegalArgumentException("Name $groupName is already used")
 
-        usedNames.add(groupName)
+        usedGroupNames.add(groupName)
     }
 
     private var currentIndex = 0
@@ -154,5 +149,45 @@ class RadioButton<T>(val group: RadioGroup<T>, val value: T, parent: CanHaveElem
                 group.select(index)
             }
         }
+    }
+}
+
+//TODO indexing is kind of odd for nulls, it just defaults to the first value
+class SelectElement<T>(
+    val values: List<T>,
+    val optionBuilder: StandardDisplayElement<HTMLOptionElement>.(T) -> Unit,
+    defaultIndex: Int?,
+    parent: CanHaveElement<*>
+) :
+    InputElement<SelectElement<T>, T, HTMLSelectElement>("select", parent, { true }, {}) {
+
+    override fun getValue(): T = values[index!!]
+
+    override fun setValue(value: T) {
+        index = values.indexOf(value).let { if (it == -1) null else it }
+    }
+
+    override fun isRawValid(): Boolean = index != null
+
+    private val optionElements = mutableListOf<Element<*, HTMLOptionElement>>()
+
+    var index
+        get() = optionElements.indexOfFirst { it.underlying.selected }.let { if (it == -1) null else it }
+        set(v) {
+            if (v == null)
+                optionElements.forEach { it.underlying.selected = false }
+            else
+                optionElements[v].underlying.selected = true
+        }
+
+    init {
+        values.forEach {
+            val o = StandardDisplayElement<HTMLOptionElement>("option", this)
+            optionElements.add(o)
+            o {
+                optionBuilder(it)
+            }
+        }
+        index = defaultIndex
     }
 }

@@ -1,14 +1,15 @@
 package com.rnett.kframejs
 
+import com.rnett.kframejs.dom.br
 import com.rnett.kframejs.dom.button
 import com.rnett.kframejs.dom.div
-import com.rnett.kframejs.dom.input.booleanInput
+import com.rnett.kframejs.dom.input.selectFromAutocomplete
 import com.rnett.kframejs.dom.p
 import com.rnett.kframejs.structure.element.page
 
 /*TODO List:
-    inputs (check numeric)
     timer/time offset
+    multiple bindings to the same prop doesn't work (one overwrites the others)
     `
     positioning of bindings doesn't work (add wrapper helper?)
     `
@@ -30,24 +31,20 @@ fun main(args: Array<String>) {
     page {
         body {
             div {
-                val data = Box(true)
-
-                booleanInput(data::value)
-                +"Checkbox"
+                val data = Box("second")
 
                 p {
-                    +{
-                        if (data.value)
-                            "Checked"
-                        else
-                            "Unchecked"
-                    }
+                    +{ data.value.toString() }
                 }
+                br
+
+                selectFromAutocomplete(data::value, listOf("first", "second", "third", "fourth"))
+
+                br
+
                 button {
-                    +"Switch"
-                    on.click {
-                        data.value = !data.value
-                    }
+                    +"Make Third"
+                    on.click { data.value = "third" }
                 }
             }
         }
