@@ -26,7 +26,7 @@ import com.rnett.kframejs.structure.element.page
 
 data class Box<T>(var value: T)
 
-fun main(args: Array<String>) {
+fun main2(args: Array<String>) {
     page {
         body {
             div {
