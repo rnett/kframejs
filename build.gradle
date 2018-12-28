@@ -10,14 +10,21 @@ buildscript{
             url "https://dl.bintray.com/kotlin/kotlin-eap"
         }
         maven { url "https://kotlin.bintray.com/kotlinx" }
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
     }
 
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath "org.jetbrains.kotlin:kotlin-frontend-plugin:$frontend_version"
         classpath "org.jetbrains.kotlin:kotlin-serialization:$kotlin_version"
+        classpath "com.moowork.gradle:gradle-node-plugin:1.2.0"
     }
 }
+
+apply plugin: "com.moowork.node"
+
 // apply plugin
 apply plugin: 'org.jetbrains.kotlin.frontend'
 
@@ -25,6 +32,7 @@ apply plugin: 'kotlin2js'
 
 apply plugin: 'maven'
 apply plugin: 'maven-publish'
+
 
 group "com.rnett.kframejs"
 version "1.1.0"
