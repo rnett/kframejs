@@ -90,7 +90,7 @@ kotlinFrontend {
         //mode = 'production'
     }
 
-    //downloadNodeJsVersion = "latest"
+    downloadNodeJsVersion = "latest"
 }
 
 apply plugin: 'maven-publish'
@@ -117,10 +117,3 @@ publishing {
         }
     }
 }
-
-/*
-tasks.matching { it.name == 'npm-preunpack' }.all { Task task ->
-    task.dependsOn "nodejs-download"
-}
-
-*/
