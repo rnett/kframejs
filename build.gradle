@@ -90,7 +90,7 @@ kotlinFrontend {
         //mode = 'production'
     }
 
-    downloadNodeJsVersion = "latest"
+    //downloadNodeJsVersion = "latest"
 }
 
 apply plugin: 'maven-publish'
