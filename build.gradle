@@ -121,21 +121,21 @@ publishing {
 
 node {
     // Version of node to use.
-    version = '0.11.10'
+    version = '10.15.0'
 
     // Version of npm to use.
-    npmVersion = '2.1.5'
+    npmVersion = '6.4.1'
+    download = true
 
     // Version of Yarn to use.
-    yarnVersion = '0.16.1'
+    //yarnVersion = '0.16.1'
 
+    /*
     // Base URL for fetching node distributions (change if you have a mirror).
     distBaseUrl = 'https://nodejs.org/dist'
 
     // If true, it will download node using above parameters.
     // If false, it will try to use globally installed node.
-    download = true
-    /*
     // Set the work directory for unpacking node
     workDir = file("${project.buildDir}/nodejs")
 
@@ -146,9 +146,11 @@ node {
     yarnWorkDir = file("${project.buildDir}/yarn")
 
     // Set the work directory where node_modules should be located
-    nodeModulesDir = file("${project.projectDir}")
+    nodeModulesDir = file("${project.buildDir}")
     */
+
 }
+
 tasks.matching { it.name == 'npm-preunpack' }.all { Task task ->
     task.dependsOn nodeSetup
 }
