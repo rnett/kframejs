@@ -92,6 +92,8 @@ kotlinFrontend {
         mode = 'development'
         //mode = 'production'
     }
+
+    downloadNodeJsVersion = "latest"
 }
 
 apply plugin: 'maven-publish'
@@ -126,6 +128,8 @@ node {
     // Version of npm to use.
     npmVersion = '6.4.1'
     download = true
+    workDir = file("${project.buildDir}/nodejs")
+    npmWorkDir = file("${project.buildDir}/npm")
 
     // Version of Yarn to use.
     //yarnVersion = '0.16.1'
@@ -152,5 +156,6 @@ node {
 }
 
 tasks.matching { it.name == 'npm-preunpack' }.all { Task task ->
-    task.dependsOn nodeSetup
+    task.dependsOn "nodejs-download"
 }
+
