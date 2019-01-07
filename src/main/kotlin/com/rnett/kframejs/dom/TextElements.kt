@@ -21,6 +21,61 @@ inline fun <ParentType> ParentType.h(
     }
 
 @KFrameElementDSL
+inline fun <ParentType> ParentType.h1(
+    klass: String = "",
+    id: String = "",
+    crossinline builder: StandardDisplayElementBuilder<HTMLHeadingElement> = {}
+)
+        where ParentType : AnyDisplayElement, ParentType : CanHaveElement<*> =
+    h(1, klass, id, builder)
+
+@KFrameElementDSL
+inline fun <ParentType> ParentType.h2(
+    klass: String = "",
+    id: String = "",
+    crossinline builder: StandardDisplayElementBuilder<HTMLHeadingElement> = {}
+)
+        where ParentType : AnyDisplayElement, ParentType : CanHaveElement<*> =
+    h(2, klass, id, builder)
+
+@KFrameElementDSL
+inline fun <ParentType> ParentType.h3(
+    klass: String = "",
+    id: String = "",
+    crossinline builder: StandardDisplayElementBuilder<HTMLHeadingElement> = {}
+)
+        where ParentType : AnyDisplayElement, ParentType : CanHaveElement<*> =
+    h(3, klass, id, builder)
+
+@KFrameElementDSL
+inline fun <ParentType> ParentType.h4(
+    klass: String = "",
+    id: String = "",
+    crossinline builder: StandardDisplayElementBuilder<HTMLHeadingElement> = {}
+)
+        where ParentType : AnyDisplayElement, ParentType : CanHaveElement<*> =
+    h(4, klass, id, builder)
+
+@KFrameElementDSL
+inline fun <ParentType> ParentType.h5(
+    klass: String = "",
+    id: String = "",
+    crossinline builder: StandardDisplayElementBuilder<HTMLHeadingElement> = {}
+)
+        where ParentType : AnyDisplayElement, ParentType : CanHaveElement<*> =
+    h(5, klass, id, builder)
+
+@KFrameElementDSL
+inline fun <ParentType> ParentType.h6(
+    klass: String = "",
+    id: String = "",
+    crossinline builder: StandardDisplayElementBuilder<HTMLHeadingElement> = {}
+)
+        where ParentType : AnyDisplayElement, ParentType : CanHaveElement<*> =
+    h(6, klass, id, builder)
+
+
+@KFrameElementDSL
 inline fun <T> T.p(
     text: String = "",
     klass: String = "",
