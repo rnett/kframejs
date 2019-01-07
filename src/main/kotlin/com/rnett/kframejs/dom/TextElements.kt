@@ -2,10 +2,23 @@ package com.rnett.kframejs.dom
 
 import com.rnett.kframejs.dom.classes.A
 import com.rnett.kframejs.structure.element.*
-import org.w3c.dom.HTMLBRElement
-import org.w3c.dom.HTMLLabelElement
-import org.w3c.dom.HTMLParagraphElement
-import org.w3c.dom.HTMLTextAreaElement
+import org.w3c.dom.*
+
+@KFrameElementDSL
+inline fun <ParentType> ParentType.h(
+    size: Int,
+    klass: String = "",
+    id: String = "",
+    crossinline builder: StandardDisplayElementBuilder<HTMLHeadingElement> = {}
+)
+        where ParentType : AnyDisplayElement, ParentType : CanHaveElement<*> =
+    StandardDisplayElement<HTMLHeadingElement>("h$size", this).invoke {
+        if (klass != "")
+            this.klass = klass
+        if (id != "")
+            this.id = id
+        builder()
+    }
 
 @KFrameElementDSL
 inline fun <T> T.p(
