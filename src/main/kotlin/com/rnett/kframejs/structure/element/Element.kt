@@ -190,6 +190,8 @@ abstract class Element<E : Element<E, U>, U : W3Element>(val tag: String, val ra
     @KFrameElementDSL
     operator fun KProperty0<View<E>>.unaryPlus() = boundView(this)
 
+    operator fun HasClass.unaryPlus() = addClass(this)
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other is W3Element) return underlying == other
