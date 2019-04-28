@@ -1,6 +1,6 @@
 buildscript{
     ext.web_dir = 'web'
-    ext.kotlin_version = '1.3.11'
+    ext.kotlin_version = '1.3.31'
     ext.frontend_version = '0.0.37'
 
     repositories {
@@ -51,7 +51,7 @@ repositories {
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-js:1.3.11"
 
-    compile "org.jetbrains.kotlinx:kotlinx-serialization-runtime-js:0.9.1"
+    compile "org.jetbrains.kotlinx:kotlinx-serialization-runtime-js:0.11.0"
 }
 
 compileKotlin2Js {
