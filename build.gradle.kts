@@ -1,6 +1,7 @@
 plugins {
     id("org.jetbrains.kotlin.js") version "1.3.60"
     `maven-publish`
+    maven
     id("kotlinx-serialization") version "1.3.60"
 }
 
